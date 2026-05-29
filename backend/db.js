@@ -69,36 +69,37 @@ const MODELS = [
   },
 ];
 
-// 12 groups × 4 teams
+// 12 groups × 4 teams (official FIFA World Cup 2026 draw, December 5, 2025)
+// Team order matches MD1 pairings: T1 vs T2, T3 vs T4
 const GROUPS = {
-  A: ['USA', 'Hungary', 'Senegal', 'New Zealand'],
-  B: ['Canada', 'Denmark', 'Nigeria', 'Trinidad & Tobago'],
-  C: ['Mexico', 'Poland', 'Algeria', 'Iraq'],
-  D: ['Argentina', 'Croatia', 'Japan', 'Ghana'],
-  E: ['Brazil', 'Switzerland', 'Morocco', 'Costa Rica'],
-  F: ['France', 'Serbia', 'Saudi Arabia', 'Honduras'],
-  G: ['England', 'Austria', 'Ivory Coast', 'Panama'],
-  H: ['Spain', 'Ukraine', 'Australia', 'Cameroon'],
-  I: ['Portugal', 'Scotland', 'Colombia', 'Tunisia'],
-  J: ['Germany', 'Italy', 'Iran', 'Jamaica'],
-  K: ['Netherlands', 'Uruguay', 'Egypt', 'Uzbekistan'],
-  L: ['South Korea', 'Venezuela', 'Qatar', 'Ecuador'],
+  A: ['Mexico', 'South Africa', 'South Korea', 'Czech Republic'],
+  B: ['Canada', 'Bosnia and Herzegovina', 'Qatar', 'Switzerland'],
+  C: ['Brazil', 'Morocco', 'Haiti', 'Scotland'],
+  D: ['USA', 'Paraguay', 'Australia', 'Türkiye'],
+  E: ['Germany', 'Curaçao', 'Ivory Coast', 'Ecuador'],
+  F: ['Netherlands', 'Japan', 'Sweden', 'Tunisia'],
+  G: ['Belgium', 'Egypt', 'Iran', 'New Zealand'],
+  H: ['Spain', 'Cape Verde', 'Saudi Arabia', 'Uruguay'],
+  I: ['France', 'Senegal', 'Iraq', 'Norway'],
+  J: ['Argentina', 'Algeria', 'Austria', 'Jordan'],
+  K: ['Portugal', 'DR Congo', 'Uzbekistan', 'Colombia'],
+  L: ['England', 'Croatia', 'Ghana', 'Panama'],
 };
 
-// Matchday base dates per group pair (2 groups share each date)
+// Matchday base dates per group (MD1, MD2, MD3)
 const GROUP_DATES = {
-  A: ['2026-06-12', '2026-06-19', '2026-06-26'],
-  B: ['2026-06-12', '2026-06-19', '2026-06-26'],
-  C: ['2026-06-11', '2026-06-18', '2026-06-25'], // Mexico opening match
-  D: ['2026-06-13', '2026-06-20', '2026-06-25'],
-  E: ['2026-06-13', '2026-06-20', '2026-06-26'],
-  F: ['2026-06-14', '2026-06-21', '2026-06-26'],
-  G: ['2026-06-14', '2026-06-21', '2026-06-27'],
-  H: ['2026-06-15', '2026-06-22', '2026-06-27'],
-  I: ['2026-06-15', '2026-06-22', '2026-06-27'],
-  J: ['2026-06-16', '2026-06-23', '2026-06-27'],
-  K: ['2026-06-16', '2026-06-23', '2026-06-28'],
-  L: ['2026-06-17', '2026-06-24', '2026-06-28'],
+  A: ['2026-06-11', '2026-06-18', '2026-06-24'], // Mexico opening match
+  B: ['2026-06-12', '2026-06-18', '2026-06-24'],
+  C: ['2026-06-13', '2026-06-19', '2026-06-24'],
+  D: ['2026-06-12', '2026-06-19', '2026-06-25'],
+  E: ['2026-06-14', '2026-06-20', '2026-06-25'],
+  F: ['2026-06-14', '2026-06-20', '2026-06-25'],
+  G: ['2026-06-15', '2026-06-21', '2026-06-26'],
+  H: ['2026-06-15', '2026-06-21', '2026-06-26'],
+  I: ['2026-06-16', '2026-06-22', '2026-06-26'],
+  J: ['2026-06-16', '2026-06-22', '2026-06-27'],
+  K: ['2026-06-17', '2026-06-23', '2026-06-27'],
+  L: ['2026-06-17', '2026-06-23', '2026-06-27'],
 };
 
 // Within each group: [T1,T2,T3,T4] → 6 matches across 3 matchdays

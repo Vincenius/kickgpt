@@ -7,3 +7,4 @@ data/predictor.db-wal
 data/images/
 .env
 *.log
+data/claude_errors.txt

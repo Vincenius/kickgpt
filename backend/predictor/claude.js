@@ -40,7 +40,15 @@ async function predict(match, triggerType = 'initial') {
   if (!textBlock) throw new Error('No text in Claude response');
 
   const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('No JSON in Claude response');
+  if (!jsonMatch) {
+    const fs = require('fs');
+    const path = require('path');
+    const logDir = path.join(__dirname, '..', '..', 'data');
+    const logPath = path.join(logDir, 'claude_errors.txt');
+    const entry = `\n--- ${new Date().toISOString()} | ${match.home_team} vs ${match.away_team} ---\n${textBlock.text}\n`;
+    fs.appendFileSync(logPath, entry);
+    throw new Error('No JSON in Claude response');
+  }
 
   const parsed = JSON.parse(jsonMatch[0]);
   return validateTip(parsed, match);
