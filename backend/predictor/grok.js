@@ -2,7 +2,7 @@
 require('dotenv').config();
 const OpenAI = require('openai');
 
-const MODEL = process.env.GROK_MODEL || 'grok-3';
+const MODEL = process.env.GROK_MODEL || 'grok-4.3';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
@@ -13,7 +13,7 @@ ${match.home_team} vs ${match.away_team} | ${match.match_date} | Stage: ${stageM
 Trigger: ${triggerType}
 
 KO rules: tip result after full penalty shootout if needed. Draws valid (goes to extra time). Group stage = 90min only.
-Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected Kicktipp points.
+Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected prediction points.
 
 Research: latest X posts, news, current form, injuries, suspensions, head-to-head, bookmaker odds. Mention sources.
 
@@ -33,13 +33,13 @@ async function predict(match, triggerType = 'initial') {
     baseURL: 'https://api.x.ai/v1',
   });
 
-  const response = await client.chat.completions.create({
+  const response = await client.responses.create({
     model: MODEL,
-    messages: [{ role: 'user', content: buildPrompt(match, triggerType) }],
-    response_format: { type: 'json_object' },
+    tools: [{ type: 'web_search' }],
+    input: buildPrompt(match, triggerType),
   });
 
-  const text = response.choices[0].message.content;
+  const text = response.output_text;
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('No JSON in Grok response');
 

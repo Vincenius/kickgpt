@@ -55,6 +55,7 @@ function getModels() {
     gemini: require('./predictor/gemini'),
     grok: require('./predictor/grok'),
     terminator: require('./predictor/terminator'),
+    mistral: require('./predictor/mistral'),
   };
 }
 
@@ -73,7 +74,7 @@ async function tipMatches(matches, triggerType) {
 }
 
 function envKey(name) {
-  return { claude: 'ANTHROPIC_API_KEY', gpt: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY', grok: 'GROK_API_KEY', terminator: 'ODDS_API_KEY' }[name];
+  return { claude: 'ANTHROPIC_API_KEY', gpt: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY', grok: 'GROK_API_KEY', terminator: 'ODDS_API_KEY', mistral: 'MISTRAL_API_KEY' }[name];
 }
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }

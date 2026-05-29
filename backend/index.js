@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 // Middleware
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN;
+app.use(cors(corsOrigin ? { origin: corsOrigin } : { origin: false }));
 app.use(express.json());
 
 // Routes
@@ -31,6 +32,10 @@ app.use((err, req, res, _next) => {
 });
 
 async function main() {
+  if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD === 'changeme') {
+    console.warn('\n⚠️  WARNING: ADMIN_PASSWORD is not set or is still "changeme". Set a strong password before deploying.\n');
+  }
+
   init();
 
   app.listen(PORT, () => {
@@ -68,3 +73,11 @@ main().catch(err => {
   console.error('Fatal startup error:', err);
   process.exit(1);
 });
+
+const shutdown = () => {
+  console.log('[KickGPT] Shutting down gracefully...');
+  try { require('./db').getDb().close(); } catch (_) {}
+  process.exit(0);
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

@@ -28,21 +28,19 @@ export default function KiProfile() {
   if (loading) return (
     <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="card h-64 animate-pulse bg-white/3" />
+        <div key={i} className="card h-64 animate-pulse" />
       ))}
     </div>
   );
 
   if (error) return (
-    <div className="pt-8 text-center text-red-400">
-      <div className="text-4xl mb-3">⚠️</div>
+    <div className="pt-8 text-center text-red-500">
       <p>Error loading profiles: {error}</p>
     </div>
   );
 
   if (!models || !models.length) return (
-    <div className="pt-8 text-center text-gray-500">
-      <div className="text-5xl mb-4">🤖</div>
+    <div className="pt-8 text-center text-gray-400">
       <p>No models found.</p>
     </div>
   );
@@ -53,10 +51,8 @@ export default function KiProfile() {
   return (
     <div className="pt-4 animate-fade-in">
       <div className="mb-6">
-        <h1 className="text-xl font-extrabold text-white">AI Profiles</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          5 models. One World Cup. Who predicts best?
-        </p>
+        <h1 className="text-xl font-bold text-gray-900">AI Profiles</h1>
+        <p className="text-sm text-gray-500 mt-1">Five models, 104 matches. Who predicts best?</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -66,35 +62,23 @@ export default function KiProfile() {
       </div>
 
       <div className="mt-8 card p-5">
-        <h2 className="font-bold text-white mb-3">How it works</h2>
-        <div className="space-y-3 text-sm text-gray-400">
-          <div className="flex gap-3">
-            <span className="text-lg">🎯</span>
-            <div>
-              <span className="text-white font-medium">Kicktipp scoring: </span>
-              Exact result = 4 pts · Correct goal difference = 3 pts · Correct tendency = 2 pts
-            </div>
+        <h2 className="font-semibold text-gray-900 mb-4">How scoring works</h2>
+        <div className="space-y-4 text-sm text-gray-500">
+          <div>
+            <p className="font-medium text-gray-800">Kicktipp scoring</p>
+            <p className="mt-0.5">Exact result = 4 pts · Correct goal difference = 3 pts · Correct tendency = 2 pts</p>
           </div>
-          <div className="flex gap-3">
-            <span className="text-lg">🔄</span>
-            <div>
-              <span className="text-white font-medium">Updates: </span>
-              T-1 day 09:00 · T-45 minutes before kick-off (with latest line-ups)
-            </div>
+          <div>
+            <p className="font-medium text-gray-800">Prediction schedule</p>
+            <p className="mt-0.5">T-1 day at 09:00, then again 45 minutes before kick-off with the latest lineups.</p>
           </div>
-          <div className="flex gap-3">
-            <span className="text-lg">🤖</span>
-            <div>
-              <span className="text-white font-medium">TippTerminator: </span>
-              Uses Dixon-Coles Poisson model with live betting odds — no LLM involved
-            </div>
+          <div>
+            <p className="font-medium text-gray-800">OddsBot</p>
+            <p className="mt-0.5">Uses a Dixon-Coles Poisson model with live betting odds — no LLM involved.</p>
           </div>
-          <div className="flex gap-3">
-            <span className="text-lg">⚡</span>
-            <div>
-              <span className="text-white font-medium">Knockout rounds: </span>
-              As soon as a team qualifies, all AI models automatically predict their next match
-            </div>
+          <div>
+            <p className="font-medium text-gray-800">Knockout rounds</p>
+            <p className="mt-0.5">As soon as a team qualifies, all models automatically predict their next match.</p>
           </div>
         </div>
       </div>

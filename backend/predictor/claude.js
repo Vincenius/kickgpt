@@ -5,14 +5,14 @@ const Anthropic = require('@anthropic-ai/sdk');
 const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-4-8'; // Claude Opus 4.8
 
 function buildPrompt(match, triggerType) {
-  const stageMap = { group: 'Gruppenphase', r32: 'Achtelfinale (Round of 32)', r16: 'Achtelfinale', qf: 'Viertelfinale', sf: 'Halbfinale', final: 'Finale', '3rd': 'Spiel um Platz 3' };
+  const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
   return `You are competing in an AI prediction tournament for FIFA WM 2026.
 Research all information needed and predict the score for:
 ${match.home_team} vs ${match.away_team} | ${match.match_date} | Stage: ${stageMap[match.stage] || match.stage}
 Trigger: ${triggerType} (initial|t-1day|t-45min|ko-advance)
 
 KO rules: tip result after full penalty shootout if needed. Draws valid (goes to extra time). Group stage = 90min only.
-Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected Kicktipp points.
+Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected prediction points.
 
 Research: current form, injuries, suspensions, head-to-head, tournament context, bookmaker odds. Mention sources used.
 

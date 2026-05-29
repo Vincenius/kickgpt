@@ -2,7 +2,7 @@
 require('dotenv').config();
 const OpenAI = require('openai');
 
-const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-search-preview';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5.5';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
@@ -12,7 +12,7 @@ ${match.home_team} vs ${match.away_team} | ${match.match_date} | Stage: ${stageM
 Trigger: ${triggerType}
 
 KO rules: tip result after full penalty shootout if needed. Draws valid (goes to extra time). Group stage = 90min only.
-Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected Kicktipp points.
+Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected prediction points.
 
 Research: current form, injuries, suspensions, head-to-head, tournament context, bookmaker odds. Mention sources used.
 

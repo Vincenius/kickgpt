@@ -1,0 +1,180 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import MatchCard from '../components/MatchCard.jsx';
+import LiveTicker from '../components/LiveTicker.jsx';
+
+function useFetch(url, interval = 60000) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(() => {
+    fetch(url)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, [url]);
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, interval);
+    return () => clearInterval(timer);
+  }, [load, interval]);
+
+  return { data, loading, error, refresh: load };
+}
+
+function Sparkline({ points, color, width = 72, height = 24 }) {
+  if (!points || points.length < 2) return null;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const range = max - min || 1;
+  const xs = points.map((_, i) => (i / (points.length - 1)) * width);
+  const ys = points.map(v => height - ((v - min) / range) * (height - 4) - 2);
+  const pathD = xs.map((x, i) => `${i === 0 ? 'M' : 'L'} ${x} ${ys[i]}`).join(' ');
+  return (
+    <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <path d={pathD} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+      <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r="2" fill={color} />
+    </svg>
+  );
+}
+
+function TrendArrow({ trend }) {
+  if (trend > 0) return <span className="text-emerald-500 text-sm font-bold">+</span>;
+  if (trend < 0) return <span className="text-red-400 text-sm font-bold">−</span>;
+  return <span className="text-gray-300 text-sm">—</span>;
+}
+
+function Standings({ models, timeline }) {
+  if (!models || !models.length) return null;
+
+  const byModel = {};
+  if (timeline) {
+    for (const entry of timeline) {
+      if (!byModel[entry.model_id]) byModel[entry.model_id] = [];
+      byModel[entry.model_id].push(entry.cumulative_points);
+    }
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      {models.map((m, i) => (
+        <div
+          key={m.id}
+          className={`flex items-center gap-3 px-5 py-3.5 ${i < models.length - 1 ? 'border-b border-gray-100' : ''} ${i === 0 ? 'bg-gray-50/70' : ''}`}
+        >
+          <span className="text-gray-300 font-mono text-sm w-5 text-center shrink-0">{i + 1}</span>
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
+          <span className="font-medium text-gray-900 flex-1 text-sm">{m.display_name}</span>
+          {byModel[m.id] && (
+            <Sparkline points={byModel[m.id]} color={m.color} />
+          )}
+          <TrendArrow trend={m.trend} />
+          <span className="font-bold tabular-nums text-gray-900 text-sm text-right shrink-0 w-16">
+            {m.total_points} <span className="text-gray-400 font-normal text-xs">pts</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionHeader({ title, count, badge }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{title}</h2>
+      {count !== undefined && (
+        <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">{count}</span>
+      )}
+      {badge}
+    </div>
+  );
+}
+
+export default function Home() {
+  const { data: leaderboard, loading: lbLoading } = useFetch('/api/leaderboard', 30000);
+  const { data: matches, loading: mLoading, refresh } = useFetch('/api/matches', 30000);
+
+  useEffect(() => {
+    if (!matches?.live?.length) return;
+    const timer = setInterval(refresh, 15000);
+    return () => clearInterval(timer);
+  }, [matches?.live?.length, refresh]);
+
+  const { models, timeline } = leaderboard || {};
+  const { live = [], today = [], upcoming = [], recent = [] } = matches || {};
+  const hasLive = live.length > 0;
+  const loading = lbLoading && mLoading;
+
+  if (loading) return (
+    <div className="pt-6 space-y-3">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="card h-14 animate-pulse" />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="pt-6 space-y-10 animate-fade-in">
+      <section>
+        <SectionHeader title="Standings" />
+        <Standings models={models} timeline={timeline} />
+      </section>
+
+      {hasLive && (
+        <section>
+          <SectionHeader
+            title="Live"
+            count={live.length}
+            badge={<span className="badge-live"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />Now</span>}
+          />
+          <LiveTicker matches={live} />
+        </section>
+      )}
+
+      <section>
+        <SectionHeader
+          title="Today"
+          count={today.length}
+          badge={
+            <span className="text-xs text-gray-400">
+              {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </span>
+          }
+        />
+        {today.length ? (
+          <div className="space-y-3">
+            {today.map(m => <MatchCard key={m.id} match={m} />)}
+          </div>
+        ) : (
+          <div className="card p-5 text-sm text-gray-400">No matches today</div>
+        )}
+      </section>
+
+      {upcoming.length > 0 && (
+        <section>
+          <SectionHeader title="Upcoming" count={upcoming.length} />
+          <div className="space-y-3">
+            {upcoming.map(m => <MatchCard key={m.id} match={m} />)}
+          </div>
+        </section>
+      )}
+
+      {recent.length > 0 && (
+        <section>
+          <SectionHeader title="Recent Results" count={recent.length} />
+          <div className="space-y-3">
+            {recent.map(m => <MatchCard key={m.id} match={m} />)}
+          </div>
+        </section>
+      )}
+
+      {!hasLive && !today.length && !upcoming.length && !recent.length && (models?.length > 0) && (
+        <div className="pt-4 text-center text-gray-400">
+          <p className="text-base font-medium text-gray-700 mb-1">Tournament starting soon</p>
+          <p className="text-sm">Match predictions will appear here once the group stage begins.</p>
+        </div>
+      )}
+    </div>
+  );
+}

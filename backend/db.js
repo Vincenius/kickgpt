@@ -50,8 +50,17 @@ const MODELS = [
     api_type: 'grok',
   },
   {
+    name: 'mistral',
+    display_name: 'Mistral Large 3',
+    tagline: 'The Europeen – sharp reasoning, live web search',
+    description: "Mistral's flagship model with built-in web search via the Agents API",
+    color: '#F59E0B',
+    bg_color: '#1C1400',
+    api_type: 'mistral',
+  },
+  {
     name: 'terminator',
-    display_name: 'TippTerminator',
+    display_name: 'OddsBot',
     tagline: 'The Machine – pure math, no gut feeling',
     description: 'Dixon-Coles Poisson model powered by live betting odds',
     color: '#06B6D4',
@@ -123,7 +132,7 @@ const KO_SLOTS = [
   { stage: 'sf', matchday: 1, date: '2026-07-15' },
   { stage: 'sf', matchday: 2, date: '2026-07-16' },
   // Third place
-  { stage: '3rd', matchday: 1, date: '2026-07-19' },
+  { stage: '3rd', matchday: 1, date: '2026-07-17' },
   // Final
   { stage: 'final', matchday: 1, date: '2026-07-19' },
 ];

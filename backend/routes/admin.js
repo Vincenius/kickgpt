@@ -10,9 +10,11 @@ const { generateDailyImage } = require('../imageGen');
 const path = require('path');
 const fs = require('fs');
 
+const ALLOWED_PREDICTOR_FILES = new Set(['claude', 'openai', 'gemini', 'grok', 'terminator', 'mistral']);
+
 function auth(req, res, next) {
   const pass = req.headers['x-admin-password'] || req.query.password;
-  if (pass !== process.env.ADMIN_PASSWORD) {
+  if (!process.env.ADMIN_PASSWORD || !pass || pass !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   next();
@@ -31,7 +33,11 @@ router.post('/trigger-tip', async (req, res) => {
   try {
     let results;
     if (model_name) {
-      const predictor = require(`../predictor/${model_name === 'gpt' ? 'openai' : model_name}`);
+      const file = model_name === 'gpt' ? 'openai' : model_name;
+      if (!ALLOWED_PREDICTOR_FILES.has(file)) {
+        return res.status(400).json({ error: `Unknown model: ${model_name}` });
+      }
+      const predictor = require(`../predictor/${file}`);
       const tip = await predictor.predict(match, trigger_type);
       saveTip(db, match, model_name, tip, trigger_type);
       results = [{ model: model_name, ...tip }];

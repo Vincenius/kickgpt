@@ -1,13 +1,13 @@
 'use strict';
 require('dotenv').config();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
+const MODEL = process.env.MISTRAL_MODEL || 'mistral-large-latest';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
   return `You are competing in an AI prediction tournament for FIFA WM 2026.
-Research all information needed and predict the score for:
+Research all information needed using your web search capabilities.
+Predict the score for:
 ${match.home_team} vs ${match.away_team} | ${match.match_date} | Stage: ${stageMap[match.stage] || match.stage}
 Trigger: ${triggerType}
 
@@ -26,18 +26,34 @@ Return ONLY valid JSON (no markdown, no code block):
 }`;
 }
 
+function extractText(response) {
+  for (const output of response.outputs || []) {
+    if (output.type === 'message.output') {
+      if (typeof output.content === 'string') return output.content;
+      if (Array.isArray(output.content)) {
+        return output.content.map(c => c.text ?? String(c)).join('');
+      }
+    }
+  }
+  return '';
+}
+
 async function predict(match, triggerType = 'initial') {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({
+  const { Mistral } = require('@mistralai/mistralai');
+  const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+  const response = await client.beta.conversations.start({
     model: MODEL,
-    tools: [{ googleSearch: {} }],
+    tools: [{ type: 'web_search' }],
+    inputs: buildPrompt(match, triggerType),
+    store: false,
   });
 
-  const result = await model.generateContent(buildPrompt(match, triggerType));
-  const text = result.response.text();
+  const text = extractText(response);
+  if (!text) throw new Error('No text in Mistral response');
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('No JSON in Gemini response');
+  if (!jsonMatch) throw new Error('No JSON in Mistral response');
 
   const parsed = JSON.parse(jsonMatch[0]);
   return validateTip(parsed);

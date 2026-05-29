@@ -28,7 +28,7 @@ async function generateDailyImage(db) {
   const ctx = canvas.getContext('2d');
 
   const models = getTotals(db);
-  const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 
   // Background
   ctx.fillStyle = '#0A0A0F';
@@ -45,11 +45,11 @@ async function generateDailyImage(db) {
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 52px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🏆 KI WM-Tipps Rangliste', 540, 80);
+  ctx.fillText('AI World Cup Predictions 2026', 540, 80);
 
   ctx.fillStyle = '#9CA3AF';
   ctx.font = '30px sans-serif';
-  ctx.fillText(`Stand: ${today}`, 540, 130);
+  ctx.fillText(`Standings: ${today}`, 540, 130);
 
   // Leaderboard
   models.forEach((m, i) => {
@@ -82,7 +82,7 @@ async function generateDailyImage(db) {
     ctx.fillStyle = m.color;
     ctx.font = `bold ${i === 0 ? 56 : 48}px sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(`${m.total_points} Pkt`, 990, y + 80);
+    ctx.fillText(`${m.total_points} pts`, 990, y + 80);
   });
 
   // Footer

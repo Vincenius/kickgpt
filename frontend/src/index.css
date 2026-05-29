@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#0A0A0F] text-white antialiased;
+    @apply bg-gray-50 text-gray-900 antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -16,26 +16,26 @@
     width: 6px;
     height: 6px;
   }
-  ::-webkit-scrollbar-track { background: #131320; }
-  ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+  ::-webkit-scrollbar-track { background: #F3F4F6; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
 }
 
 @layer components {
   .card {
-    @apply bg-surface-card rounded-2xl border border-white/5;
+    @apply bg-white rounded-2xl border border-gray-200 shadow-sm;
   }
 
   .badge-live {
-    @apply inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+    @apply inline-flex items-center gap-1.5 bg-red-50 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full border border-red-200;
   }
 
   .badge-disputed {
-    @apply inline-flex items-center gap-1 bg-amber-500/20 text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+    @apply inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-amber-200;
   }
 
   .badge-consensus {
-    @apply inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+    @apply inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200;
   }
 
   .score-big {
@@ -43,18 +43,18 @@
   }
 
   .nav-tab {
-    @apply flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200;
+    @apply flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200;
   }
 
   .nav-tab-active {
-    @apply bg-white/10 text-white;
+    @apply bg-gray-100 text-gray-900;
   }
 
   .nav-tab-inactive {
-    @apply text-gray-400 hover:text-white hover:bg-white/5;
+    @apply text-gray-500 hover:text-gray-900 hover:bg-gray-50;
   }
 
   .btn-primary {
-    @apply bg-violet-600 hover:bg-violet-500 text-white font-semibold px-4 py-2 rounded-xl transition-colors text-sm;
+    @apply bg-violet-600 hover:bg-violet-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors text-sm;
   }
 }

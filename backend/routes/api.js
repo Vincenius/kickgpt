@@ -238,13 +238,18 @@ router.get('/model/:id', withDb((req, res, db) => {
 // GET /api/bonus-tips
 router.get('/bonus-tips', withDb((req, res, db) => {
   const tips = db.prepare(`
-    SELECT bt.*, m.display_name, m.color FROM bonus_tips bt
+    SELECT bt.*, m.display_name, m.color, m.name as model_name FROM bonus_tips bt
     JOIN models m ON m.id = bt.model_id
     ORDER BY bt.question, m.display_name
   `).all();
 
   const results = db.prepare('SELECT * FROM bonus_results').all();
-  res.json({ tips, results });
+
+  const today = new Date().toISOString().split('T')[0];
+  const tournamentStarted = today >= '2026-06-11' ||
+    db.prepare("SELECT COUNT(*) as c FROM matches WHERE status != 'SCHEDULED'").get().c > 0;
+
+  res.json({ tips, results, locked: tournamentStarted });
 }));
 
 module.exports = router;

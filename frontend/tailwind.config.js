@@ -5,9 +5,9 @@ export default {
     extend: {
       colors: {
         surface: {
-          DEFAULT: '#131320',
-          card: '#1A1A2E',
-          hover: '#22223A',
+          DEFAULT: '#F9FAFB',
+          card: '#FFFFFF',
+          hover: '#F3F4F6',
         },
         model: {
           claude: '#8B5CF6',

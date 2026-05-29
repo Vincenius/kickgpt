@@ -25,13 +25,27 @@ async function fetchOdds(homeTeam, awayTeam) {
     clearTimeout(timer);
   }
 
-  const normalize = s => s.toLowerCase().replace(/[^a-z]/g, '');
-  const home = normalize(homeTeam);
-  const away = normalize(awayTeam);
+  // Odds API uses different names for some national teams
+  const API_NAME_OVERRIDES = {
+    'USA': 'United States',
+    'South Korea': 'Korea Republic',
+    'Ivory Coast': 'Ivory Coast',
+    'Trinidad & Tobago': 'Trinidad and Tobago',
+  };
 
+  const normalize = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const homeN = normalize(API_NAME_OVERRIDES[homeTeam] || homeTeam);
+  const awayN = normalize(API_NAME_OVERRIDES[awayTeam] || awayTeam);
+
+  const teamMatch = (apiName, n) => {
+    const a = normalize(apiName);
+    return a.includes(n.slice(0, 5)) || n.includes(a.slice(0, 5));
+  };
+
+  // Both teams must appear in the event (in either order)
   const event = response.find(e =>
-    normalize(e.home_team).includes(home.slice(0, 5)) ||
-    normalize(e.away_team).includes(away.slice(0, 5))
+    (teamMatch(e.home_team, homeN) && teamMatch(e.away_team, awayN)) ||
+    (teamMatch(e.home_team, awayN) && teamMatch(e.away_team, homeN))
   );
 
   return event || null;
@@ -107,7 +121,7 @@ function buildScoreMatrix(lH, lA) {
   return matrix;
 }
 
-function expectedKicktippPoints(tipH, tipA, matrix, isKO) {
+function expectedPoints(tipH, tipA, matrix, isKO) {
   let expected = 0;
   for (const { h, a, p } of matrix) {
     const td = tipH - tipA, rd = h - a;
@@ -115,9 +129,6 @@ function expectedKicktippPoints(tipH, tipA, matrix, isKO) {
     if (tipH === h && tipA === a) pts = 4;
     else if (td === rd) pts = 3;
     else if (Math.sign(td) === Math.sign(rd)) pts = 2;
-
-    // In KO, draw tips (tendency=draw) match any drawn result (regardless of score)
-    if (isKO && Math.sign(td) === 0 && Math.sign(rd) === 0 && pts === 0) pts = 2;
     expected += p * pts;
   }
   return expected;
@@ -127,7 +138,7 @@ function selectBestTip(matrix, isKO) {
   let best = null;
   for (let h = 0; h <= MAX_GOALS; h++) {
     for (let a = 0; a <= MAX_GOALS; a++) {
-      const ev = expectedKicktippPoints(h, a, matrix, isKO);
+      const ev = expectedPoints(h, a, matrix, isKO);
       if (!best || ev > best.ev) best = { h, a, ev };
     }
   }
@@ -158,7 +169,7 @@ async function predict(match, triggerType = 'initial') {
       }
     }
   } catch (err) {
-    console.warn(`[TippTerminator] Odds fetch failed: ${err.message}. Using defaults.`);
+    console.warn(`[OddsBot] Odds fetch failed: ${err.message}. Using defaults.`);
   }
 
   const matrix = buildScoreMatrix(lambdaH, lambdaA);
@@ -167,16 +178,16 @@ async function predict(match, triggerType = 'initial') {
   const confidence = Math.round(Math.min(95, Math.max(10, best.ev / 4 * 100)));
 
   const summary = usedOdds
-    ? `Laut ${oddsDetails} erwarte ich ${lambdaH.toFixed(1)} Tore für ${match.home_team} und ${lambdaA.toFixed(1)} für ${match.away_team}. ` +
-      `Das Dixon-Coles-Modell maximiert mit ${best.h}:${best.a} den erwarteten Punkteertrag (${best.ev.toFixed(2)} Pkt im Durchschnitt).`
-    : `Ohne aktuelle Wettquoten nutze ich Standardparameter (λH=${lambdaH}, λA=${lambdaA}). ` +
-      `Das Poisson-Modell empfiehlt ${best.h}:${best.a} mit ${best.ev.toFixed(2)} erwarteten Kicktipp-Punkten.`;
+    ? `Based on bookmaker odds, expecting ${lambdaH.toFixed(1)} goals for ${match.home_team} and ${lambdaA.toFixed(1)} for ${match.away_team}. ` +
+      `The Dixon-Coles model maximizes expected points with ${best.h}:${best.a} (avg ${best.ev.toFixed(2)} pts).`
+    : `No live odds available — using default parameters (λH=${lambdaH}, λA=${lambdaA}). ` +
+      `The Poisson model recommends ${best.h}:${best.a} with ${best.ev.toFixed(2)} expected prediction points.`;
 
   const reasoning = [
     `Model: Dixon-Coles Poisson (rho=-0.13), max goals=${MAX_GOALS}`,
     usedOdds ? oddsDetails : 'No odds available – using prior lambdas (H=1.3, A=1.1)',
     `Estimated lambdas: λH=${lambdaH.toFixed(3)}, λA=${lambdaA.toFixed(3)}`,
-    `Optimal tip: ${best.h}:${best.a} → EV=${best.ev.toFixed(4)} Kicktipp points`,
+    `Optimal tip: ${best.h}:${best.a} → EV=${best.ev.toFixed(4)} prediction points`,
     `KO mode: ${isKO}`,
   ].join('\n');
 
