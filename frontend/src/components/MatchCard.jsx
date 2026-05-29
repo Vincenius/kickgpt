@@ -3,13 +3,13 @@ import ConsensusBar from './ConsensusBar.jsx';
 import ReasoningPanel from './ReasoningPanel.jsx';
 
 const STAGE_LABELS = {
-  group: 'Gruppe',
-  r32: 'Achtelfinale (R32)',
-  r16: 'Achtelfinale',
-  qf: 'Viertelfinale',
-  sf: 'Halbfinale',
-  final: 'Finale',
-  '3rd': 'Platz 3',
+  group: 'Group Stage',
+  r32: 'Round of 32',
+  r16: 'Round of 16',
+  qf: 'Quarter-final',
+  sf: 'Semi-final',
+  final: 'Final',
+  '3rd': '3rd Place',
 };
 
 function formatDate(dateStr) {
@@ -26,10 +26,10 @@ function StatusPill({ status, minute }) {
     </span>
   );
   if (status === 'PAUSED') return (
-    <span className="badge-live">⏸ Pause</span>
+    <span className="badge-live">⏸ Half Time</span>
   );
   if (status === 'FINISHED') return (
-    <span className="inline-flex items-center text-xs text-gray-500 font-medium">Abgepfiffen</span>
+    <span className="inline-flex items-center text-xs text-gray-500 font-medium">Full Time</span>
   );
   return null;
 }
@@ -73,7 +73,7 @@ export default function MatchCard({ match, defaultExpanded = false }) {
             )}
             {match.group_name && (
               <span className="text-xs bg-white/5 text-gray-400 px-1.5 py-0.5 rounded-md">
-                Gr. {match.group_name}
+                Grp. {match.group_name}
               </span>
             )}
             {match.stage !== 'group' && (
@@ -97,7 +97,7 @@ export default function MatchCard({ match, defaultExpanded = false }) {
       {expanded && hasTips && (
         <div className="border-t border-white/5 p-4 space-y-5 animate-slide-up">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">KI-Tipps</span>
+            <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">AI Predictions</span>
             <ConsensusBar tips={match.tips} consensus={match.consensus} />
           </div>
           {match.tips.map(tip => (
@@ -107,7 +107,7 @@ export default function MatchCard({ match, defaultExpanded = false }) {
           {/* Result if finished */}
           {isFinished && (
             <div className="border-t border-white/5 pt-4">
-              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Ergebnis</div>
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Result</div>
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-extrabold">{match.home_score}:{match.away_score}</span>
                 <span className="text-gray-500">– {match.home_team} vs {match.away_team}</span>
@@ -119,7 +119,7 @@ export default function MatchCard({ match, defaultExpanded = false }) {
 
       {expanded && !hasTips && (
         <div className="border-t border-white/5 p-4 text-sm text-gray-500 italic animate-slide-up">
-          Noch keine Tipps für dieses Spiel.
+          No predictions available for this match yet.
         </div>
       )}
     </div>

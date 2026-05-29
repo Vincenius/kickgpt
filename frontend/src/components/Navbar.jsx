@@ -2,9 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const TABS = [
-  { to: '/', label: 'Rangliste', emoji: '🏆' },
-  { to: '/spiele', label: 'Spiele', emoji: '⚽' },
-  { to: '/ki-profile', label: 'KI-Profile', emoji: '🤖' },
+  { to: '/', label: 'Leaderboard', emoji: '🏆' },
+  { to: '/matches', label: 'Matches', emoji: '⚽' },
+  { to: '/ai-profiles', label: 'AI Profiles', emoji: '🤖' },
 ];
 
 export default function Navbar() {
@@ -16,7 +16,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚽</span>
             <span className="font-extrabold text-white tracking-tight">KickGPT</span>
-            <span className="hidden sm:inline text-gray-500 text-sm font-medium ml-1">WM 2026</span>
+            <span className="hidden sm:inline text-gray-500 text-sm font-medium ml-1">World Cup 2026</span>
           </div>
 
           {/* Tabs */}

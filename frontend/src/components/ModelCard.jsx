@@ -64,31 +64,31 @@ export default function ModelCard({ model }) {
           <div className="text-4xl font-extrabold tabular-nums" style={{ color: model.color }}>
             {model.total_points}
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">Gesamtpunkte</div>
+          <div className="text-xs text-gray-500 mt-0.5">Total Points</div>
         </div>
         <div className="pb-1 text-gray-600 text-lg">|</div>
         <div>
           <div className="text-2xl font-bold text-white tabular-nums">#{model.rank}</div>
-          <div className="text-xs text-gray-500 mt-0.5">Platz</div>
+          <div className="text-xs text-gray-500 mt-0.5">Rank</div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="space-y-2 border-t border-white/5 pt-3">
-        <StatRow label="Getippte Spiele" value={model.tips_count} />
-        <StatRow label="Ø Konfidenz" value={model.avg_confidence ? `${model.avg_confidence}%` : null} />
-        <StatRow label="Trefferquote" value={winRate !== null ? `${winRate}%` : null} />
-        <StatRow label="Exakte Tipps" value={model.exact_count} sub={exactRate !== null ? `(${exactRate}%)` : ''} />
-        <StatRow label="Zieldifferenz" value={model.goal_diff_count} />
-        <StatRow label="Tendenz richtig" value={model.tendency_count} />
-        <StatRow label="Falsch" value={model.wrong_count} />
+        <StatRow label="Predictions Made" value={model.tips_count} />
+        <StatRow label="Avg. Confidence" value={model.avg_confidence ? `${model.avg_confidence}%` : null} />
+        <StatRow label="Accuracy" value={winRate !== null ? `${winRate}%` : null} />
+        <StatRow label="Exact Scores" value={model.exact_count} sub={exactRate !== null ? `(${exactRate}%)` : ''} />
+        <StatRow label="Goal Difference" value={model.goal_diff_count} />
+        <StatRow label="Correct Tendency" value={model.tendency_count} />
+        <StatRow label="Wrong" value={model.wrong_count} />
       </div>
 
       {/* Best / Worst tip */}
       {(model.best_tip || model.worst_tip) && (
         <div className="space-y-2 border-t border-white/5 pt-3">
-          <TipPreview label="Bester Tipp" tip={model.best_tip} color={model.color} />
-          <TipPreview label="Schwächster Tipp" tip={model.worst_tip} color="#6B7280" />
+          <TipPreview label="Best Prediction" tip={model.best_tip} color={model.color} />
+          <TipPreview label="Worst Prediction" tip={model.worst_tip} color="#6B7280" />
         </div>
       )}
     </div>

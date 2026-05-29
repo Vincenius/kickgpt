@@ -11,7 +11,7 @@ const MODEL_COLORS = {
 
 export default function ConsensusBar({ tips, consensus }) {
   if (!tips || tips.length === 0) return (
-    <div className="text-xs text-gray-500 italic">Kein Tipp vorhanden</div>
+    <div className="text-xs text-gray-500 italic">No tips yet</div>
   );
 
   const isDisputed = consensus?.is_disputed;
@@ -21,22 +21,22 @@ export default function ConsensusBar({ tips, consensus }) {
       {/* Consensus / Disputed Badge */}
       <div className="flex items-center gap-2 flex-wrap">
         {isDisputed ? (
-          <span className="badge-disputed">⚡ Streitfall</span>
+          <span className="badge-disputed">⚡ Disputed</span>
         ) : (
-          <span className="badge-consensus">✓ Konsens</span>
+          <span className="badge-consensus">✓ Consensus</span>
         )}
 
         {/* Vote counts */}
         {consensus && (
           <div className="flex items-center gap-2 text-xs text-gray-400">
             {consensus.home_votes > 0 && (
-              <span className="text-emerald-400 font-semibold">{consensus.home_votes}× Heimsieg</span>
+              <span className="text-emerald-400 font-semibold">{consensus.home_votes}× Home Win</span>
             )}
             {consensus.draw_votes > 0 && (
-              <span className="text-amber-400 font-semibold">{consensus.draw_votes}× Unentschieden</span>
+              <span className="text-amber-400 font-semibold">{consensus.draw_votes}× Draw</span>
             )}
             {consensus.away_votes > 0 && (
-              <span className="text-red-400 font-semibold">{consensus.away_votes}× Auswärtssieg</span>
+              <span className="text-red-400 font-semibold">{consensus.away_votes}× Away Win</span>
             )}
           </div>
         )}

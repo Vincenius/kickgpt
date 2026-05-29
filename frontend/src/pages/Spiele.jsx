@@ -44,7 +44,6 @@ function EmptyState({ label }) {
 export default function Spiele() {
   const { data, loading, error, refresh } = useFetch('/api/matches', 30000);
 
-  // Auto-refresh faster when there are live matches
   useEffect(() => {
     if (!data?.live?.length) return;
     const timer = setInterval(refresh, 15000);
@@ -60,7 +59,7 @@ export default function Spiele() {
   if (error) return (
     <div className="pt-8 text-center text-red-400">
       <div className="text-4xl mb-3">⚠️</div>
-      <p>Fehler beim Laden: {error}</p>
+      <p>Error loading matches: {error}</p>
     </div>
   );
 
@@ -69,50 +68,46 @@ export default function Spiele() {
 
   return (
     <div className="pt-4 space-y-8 animate-fade-in">
-      {/* LIVE */}
       {hasLive && (
         <section>
           <SectionHeader
             title="Live"
             count={live.length}
-            badge={<span className="badge-live"><span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />Jetzt</span>}
+            badge={<span className="badge-live"><span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />Now</span>}
           />
           <LiveTicker matches={live} />
         </section>
       )}
 
-      {/* HEUTE */}
       <section>
         <SectionHeader
-          title="Heute"
+          title="Today"
           count={today.length}
-          badge={<span className="text-xs text-gray-500">{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long' })}</span>}
+          badge={<span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}</span>}
         />
         {today.length ? (
           <div className="space-y-3">
             {today.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
         ) : (
-          <EmptyState label="Heute keine Spiele geplant" />
+          <EmptyState label="No matches scheduled today" />
         )}
       </section>
 
-      {/* NÄCHSTE SPIELE */}
       <section>
-        <SectionHeader title="Nächste Spiele" count={upcoming.length} />
+        <SectionHeader title="Upcoming" count={upcoming.length} />
         {upcoming.length ? (
           <div className="space-y-3">
             {upcoming.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
         ) : (
-          <EmptyState label="Keine weiteren Spiele in den nächsten 3 Tagen" />
+          <EmptyState label="No matches in the next 3 days" />
         )}
       </section>
 
-      {/* KÜRZLICHE ERGEBNISSE */}
       {recent.length > 0 && (
         <section>
-          <SectionHeader title="Kürzliche Ergebnisse" count={recent.length} />
+          <SectionHeader title="Recent Results" count={recent.length} />
           <div className="space-y-3">
             {recent.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
@@ -122,8 +117,8 @@ export default function Spiele() {
       {!hasLive && !today.length && !upcoming.length && !recent.length && (
         <div className="pt-12 text-center text-gray-500">
           <div className="text-5xl mb-4">⚽</div>
-          <p className="text-lg font-medium text-white mb-1">Das Turnier beginnt bald</p>
-          <p className="text-sm">Alle 104 WM-Spiele werden hier gezeigt sobald die KI-Tipps vorliegen.</p>
+          <p className="text-lg font-medium text-white mb-1">Tournament starting soon</p>
+          <p className="text-sm">All 104 World Cup matches will appear here once AI predictions are available.</p>
         </div>
       )}
     </div>

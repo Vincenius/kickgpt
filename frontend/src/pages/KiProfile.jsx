@@ -36,27 +36,26 @@ export default function KiProfile() {
   if (error) return (
     <div className="pt-8 text-center text-red-400">
       <div className="text-4xl mb-3">⚠️</div>
-      <p>Fehler beim Laden: {error}</p>
+      <p>Error loading profiles: {error}</p>
     </div>
   );
 
   if (!models || !models.length) return (
     <div className="pt-8 text-center text-gray-500">
       <div className="text-5xl mb-4">🤖</div>
-      <p>Keine Modelle gefunden.</p>
+      <p>No models found.</p>
     </div>
   );
 
-  // Sort by rank (total_points desc, same as leaderboard)
   const sorted = [...models].sort((a, b) => b.total_points - a.total_points);
   const withRank = sorted.map((m, i) => ({ ...m, rank: i + 1 }));
 
   return (
     <div className="pt-4 animate-fade-in">
       <div className="mb-6">
-        <h1 className="text-xl font-extrabold text-white">KI-Profile</h1>
+        <h1 className="text-xl font-extrabold text-white">AI Profiles</h1>
         <p className="text-sm text-gray-400 mt-1">
-          5 Modelle. Eine Weltmeisterschaft. Wer tippt am besten?
+          5 models. One World Cup. Who predicts best?
         </p>
       </div>
 
@@ -66,36 +65,35 @@ export default function KiProfile() {
         ))}
       </div>
 
-      {/* How it works */}
       <div className="mt-8 card p-5">
-        <h2 className="font-bold text-white mb-3">So funktioniert es</h2>
+        <h2 className="font-bold text-white mb-3">How it works</h2>
         <div className="space-y-3 text-sm text-gray-400">
           <div className="flex gap-3">
             <span className="text-lg">🎯</span>
             <div>
-              <span className="text-white font-medium">Kicktipp-Wertung: </span>
-              Exaktes Ergebnis = 4 Punkte · Richtige Tordifferenz = 3 Punkte · Richtige Tendenz = 2 Punkte
+              <span className="text-white font-medium">Kicktipp scoring: </span>
+              Exact result = 4 pts · Correct goal difference = 3 pts · Correct tendency = 2 pts
             </div>
           </div>
           <div className="flex gap-3">
             <span className="text-lg">🔄</span>
             <div>
-              <span className="text-white font-medium">Aktualisierung: </span>
-              T-1 Tag 09:00 Uhr · T-45 Minuten vor Anpfiff (mit aktuellen Aufstellungen)
+              <span className="text-white font-medium">Updates: </span>
+              T-1 day 09:00 · T-45 minutes before kick-off (with latest line-ups)
             </div>
           </div>
           <div className="flex gap-3">
             <span className="text-lg">🤖</span>
             <div>
               <span className="text-white font-medium">TippTerminator: </span>
-              Nutzt Dixon-Coles Poisson-Modell mit echten Wettquoten – kein LLM
+              Uses Dixon-Coles Poisson model with live betting odds — no LLM involved
             </div>
           </div>
           <div className="flex gap-3">
             <span className="text-lg">⚡</span>
             <div>
-              <span className="text-white font-medium">KO-Runden: </span>
-              Sobald ein Team qualifiziert ist, tippt jedes KI-Modell automatisch das nächste Spiel
+              <span className="text-white font-medium">Knockout rounds: </span>
+              As soon as a team qualifies, all AI models automatically predict their next match
             </div>
           </div>
         </div>

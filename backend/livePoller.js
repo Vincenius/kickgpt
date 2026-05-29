@@ -1,6 +1,5 @@
 'use strict';
 require('dotenv').config();
-const axios = require('axios');
 const { getDb } = require('./db');
 const { calculatePoints } = require('./scoring');
 
@@ -10,31 +9,36 @@ const COMPETITION_ID = 2000; // FIFA World Cup
 let pollerInterval = null;
 let isPolling = false;
 
+async function fdFetch(path, params, key) {
+  const url = new URL(`${FD_BASE}${path}`);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'X-Auth-Token': key },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchLiveMatches() {
   const key = process.env.FOOTBALL_DATA_KEY;
   if (!key) return [];
-
-  const response = await axios.get(`${FD_BASE}/competitions/${COMPETITION_ID}/matches`, {
-    headers: { 'X-Auth-Token': key },
-    params: { status: 'IN_PLAY,PAUSED,FINISHED' },
-    timeout: 10000,
-  });
-
-  return response.data.matches || [];
+  const data = await fdFetch(`/competitions/${COMPETITION_ID}/matches`, { status: 'IN_PLAY,PAUSED,FINISHED' }, key);
+  return data.matches || [];
 }
 
 async function fetchTodayMatches() {
   const key = process.env.FOOTBALL_DATA_KEY;
   if (!key) return [];
-
   const today = new Date().toISOString().slice(0, 10);
-  const response = await axios.get(`${FD_BASE}/competitions/${COMPETITION_ID}/matches`, {
-    headers: { 'X-Auth-Token': key },
-    params: { dateFrom: today, dateTo: today },
-    timeout: 10000,
-  });
-
-  return response.data.matches || [];
+  const data = await fdFetch(`/competitions/${COMPETITION_ID}/matches`, { dateFrom: today, dateTo: today }, key);
+  return data.matches || [];
 }
 
 function mapStatus(fdStatus) {

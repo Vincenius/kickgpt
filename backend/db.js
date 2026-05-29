@@ -15,8 +15,8 @@ function getDb() {
 const MODELS = [
   {
     name: 'claude',
-    display_name: 'Claude Opus 4.7',
-    tagline: 'Der Stratege – analysiert tief, wählt präzise',
+    display_name: 'Claude Opus 4.8',
+    tagline: 'The Strategist – analyzes deeply, picks precisely',
     description: 'Anthropic\'s flagship model with deep reasoning and web search',
     color: '#8B5CF6',
     bg_color: '#1E1040',
@@ -25,7 +25,7 @@ const MODELS = [
   {
     name: 'gpt',
     display_name: 'GPT-5.5',
-    tagline: 'Der Allrounder – breit informiert, selten überrascht',
+    tagline: 'The All-Rounder – broadly informed, rarely surprised',
     description: 'OpenAI\'s versatile model with broad knowledge and web search',
     color: '#10B981',
     bg_color: '#052E1C',
@@ -34,7 +34,7 @@ const MODELS = [
   {
     name: 'gemini',
     display_name: 'Gemini 3.1 Pro',
-    tagline: 'Der Wissenschaftler – vertraut den Zahlen',
+    tagline: 'The Scientist – trusts the numbers',
     description: 'Google\'s data-driven model with search grounding',
     color: '#3B82F6',
     bg_color: '#0C1A3A',
@@ -43,7 +43,7 @@ const MODELS = [
   {
     name: 'grok',
     display_name: 'Grok 4.3',
-    tagline: 'Der Insider – kennt die neuesten News von X',
+    tagline: 'The Insider – knows the latest news from X',
     description: 'xAI\'s model with live X, web and news search',
     color: '#F97316',
     bg_color: '#2A1200',
@@ -52,7 +52,7 @@ const MODELS = [
   {
     name: 'terminator',
     display_name: 'TippTerminator',
-    tagline: 'Die Maschine – reine Mathematik, kein Bauchgefühl',
+    tagline: 'The Machine – pure math, no gut feeling',
     description: 'Dixon-Coles Poisson model powered by live betting odds',
     color: '#06B6D4',
     bg_color: '#021A20',
@@ -266,11 +266,18 @@ function init() {
 }
 
 function seedModels() {
-  const insert = db.prepare(`
-    INSERT OR IGNORE INTO models (name, display_name, tagline, description, color, bg_color, api_type)
+  const upsert = db.prepare(`
+    INSERT INTO models (name, display_name, tagline, description, color, bg_color, api_type)
     VALUES (@name, @display_name, @tagline, @description, @color, @bg_color, @api_type)
+    ON CONFLICT(name) DO UPDATE SET
+      display_name = excluded.display_name,
+      tagline = excluded.tagline,
+      description = excluded.description,
+      color = excluded.color,
+      bg_color = excluded.bg_color,
+      api_type = excluded.api_type
   `);
-  const tx = db.transaction(() => MODELS.forEach(m => insert.run(m)));
+  const tx = db.transaction(() => MODELS.forEach(m => upsert.run(m)));
   tx();
 }
 

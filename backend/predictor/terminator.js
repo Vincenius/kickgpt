@@ -1,6 +1,5 @@
 'use strict';
 require('dotenv').config();
-const axios = require('axios');
 
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 const MAX_GOALS = 8;
@@ -9,20 +8,28 @@ async function fetchOdds(homeTeam, awayTeam) {
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) throw new Error('ODDS_API_KEY not set');
 
-  const response = await axios.get(`${ODDS_API_BASE}/sports/soccer_fifa_world_cup/odds`, {
-    params: {
-      apiKey,
-      regions: 'eu',
-      markets: 'h2h,totals',
-      oddsFormat: 'decimal',
-    },
-  });
+  const url = new URL(`${ODDS_API_BASE}/sports/soccer_fifa_world_cup/odds`);
+  url.searchParams.set('apiKey', apiKey);
+  url.searchParams.set('regions', 'eu');
+  url.searchParams.set('markets', 'h2h,totals');
+  url.searchParams.set('oddsFormat', 'decimal');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  let response;
+  try {
+    const res = await fetch(url.toString(), { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    response = await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 
   const normalize = s => s.toLowerCase().replace(/[^a-z]/g, '');
   const home = normalize(homeTeam);
   const away = normalize(awayTeam);
 
-  const event = response.data.find(e =>
+  const event = response.find(e =>
     normalize(e.home_team).includes(home.slice(0, 5)) ||
     normalize(e.away_team).includes(away.slice(0, 5))
   );

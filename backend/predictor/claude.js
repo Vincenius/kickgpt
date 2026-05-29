@@ -2,7 +2,7 @@
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-4-8'; // Claude Opus 4.8
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Gruppenphase', r32: 'Achtelfinale (Round of 32)', r16: 'Achtelfinale', qf: 'Viertelfinale', sf: 'Halbfinale', final: 'Finale', '3rd': 'Spiel um Platz 3' };

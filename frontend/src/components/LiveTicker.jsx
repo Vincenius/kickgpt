@@ -21,8 +21,8 @@ function TipOutcome({ tip, homeScore, awayScore, isFinished }) {
     const goalsLeft = Math.max(8 - homeScore - awayScore, 0);
     const canStillMatch = Math.abs(td - curDiff) <= goalsLeft;
 
-    if (!canStillMatch) { status = 'impossible'; label = 'Nicht mehr möglich'; cls = 'text-red-400/70'; }
-    else { label = 'Noch möglich'; cls = 'text-amber-400'; }
+    if (!canStillMatch) { status = 'impossible'; label = 'No longer possible'; cls = 'text-red-400/70'; }
+    else { label = 'Still possible'; cls = 'text-amber-400'; }
   }
 
   return (
@@ -47,7 +47,7 @@ export default function LiveTicker({ matches }) {
           <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
           LIVE
         </span>
-        <span className="text-sm text-gray-400">{matches.length} Spiel{matches.length !== 1 ? 'e' : ''} läuft</span>
+        <span className="text-sm text-gray-400">{matches.length} match{matches.length !== 1 ? 'es' : ''} in progress</span>
       </div>
 
       <div className="space-y-3">
@@ -69,7 +69,7 @@ export default function LiveTicker({ matches }) {
               </div>
               <span className="badge-live">
                 <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
-                {match.status === 'PAUSED' ? 'Pause' : 'LIVE'}
+                {match.status === 'PAUSED' ? 'HT' : 'LIVE'}
               </span>
             </div>
 

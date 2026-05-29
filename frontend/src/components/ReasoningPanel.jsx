@@ -39,7 +39,7 @@ export default function ReasoningPanel({ tip }) {
             onClick={() => setExpanded(e => !e)}
             className="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 pl-4"
           >
-            {expanded ? '▲ Analyse einklappen' : '▼ Vollständige Analyse'}
+            {expanded ? '▲ Collapse analysis' : '▼ Full analysis'}
           </button>
           {expanded && (
             <pre className="text-xs text-gray-400 bg-black/30 rounded-xl p-3 whitespace-pre-wrap break-words font-mono leading-relaxed animate-fade-in pl-4">
@@ -54,21 +54,21 @@ export default function ReasoningPanel({ tip }) {
 
 function ConfidenceBadge({ confidence, color }) {
   if (!confidence) return null;
-  const level = confidence >= 75 ? 'Hoch' : confidence >= 50 ? 'Mittel' : 'Niedrig';
+  const level = confidence >= 75 ? 'High' : confidence >= 50 ? 'Medium' : 'Low';
   return (
-    <span className="text-xs text-gray-400" title={`Konfidenz: ${confidence}%`}>
-      {confidence}% {level === 'Hoch' ? '🔥' : level === 'Mittel' ? '〰️' : '❓'}
+    <span className="text-xs text-gray-400" title={`Confidence: ${confidence}%`}>
+      {confidence}% {level === 'High' ? '🔥' : level === 'Medium' ? '〰️' : '❓'}
     </span>
   );
 }
 
 function PointsBadge({ points, type }) {
   const config = {
-    exact: { label: '4 Pkt ✨', cls: 'bg-yellow-500/20 text-yellow-400' },
-    goal_diff: { label: '3 Pkt', cls: 'bg-blue-500/20 text-blue-400' },
-    tendency: { label: '2 Pkt', cls: 'bg-violet-500/20 text-violet-400' },
-    wrong: { label: '0 Pkt', cls: 'bg-red-500/20 text-red-400' },
+    exact: { label: '4 pts ✨', cls: 'bg-yellow-500/20 text-yellow-400' },
+    goal_diff: { label: '3 pts', cls: 'bg-blue-500/20 text-blue-400' },
+    tendency: { label: '2 pts', cls: 'bg-violet-500/20 text-violet-400' },
+    wrong: { label: '0 pts', cls: 'bg-red-500/20 text-red-400' },
   };
-  const c = config[type] || { label: `${points} Pkt`, cls: 'bg-gray-500/20 text-gray-400' };
+  const c = config[type] || { label: `${points} pts`, cls: 'bg-gray-500/20 text-gray-400' };
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.cls}`}>{c.label}</span>;
 }

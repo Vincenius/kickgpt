@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
-const STAGE_LABELS = { group: 'Gruppe', r32: 'R32', r16: 'R16', qf: 'VF', sf: 'HF', final: 'Finale', '3rd': '3. Platz' };
+const STAGE_LABELS = {
+  group: 'Group Stage', r32: 'R32', r16: 'R16',
+  qf: 'QF', sf: 'SF', final: 'Final', '3rd': '3rd Place',
+};
 
 function useFetch(url, interval = 60000) {
   const [data, setData] = useState(null);
@@ -23,9 +26,8 @@ function useFetch(url, interval = 60000) {
   return { data, loading, error };
 }
 
-// Simple SVG sparkline
 function Sparkline({ points, color, width = 120, height = 36 }) {
-  if (!points || points.length < 2) return <span className="text-xs text-gray-600">Noch keine Daten</span>;
+  if (!points || points.length < 2) return <span className="text-xs text-gray-600">No data yet</span>;
 
   const max = Math.max(...points);
   const min = Math.min(...points);
@@ -49,22 +51,37 @@ function TrendArrow({ trend }) {
 }
 
 function LeaderCard({ model, gap }) {
-  if (!model) return null;
+  if (!model) return (
+    <div className="card p-6 text-center text-gray-500">
+      <div className="text-4xl mb-2">🏆</div>
+      <p className="font-medium">No matches scored yet</p>
+      <p className="text-sm mt-1">Run tips to get the competition started</p>
+    </div>
+  );
+
   return (
-    <div className="card p-5 flex items-center gap-4" style={{ background: `linear-gradient(135deg, ${model.bg_color || '#1A1A2E'} 0%, #131320 100%)`, borderColor: `${model.color}40` }}>
+    <div
+      className="card p-5 flex items-center gap-4"
+      style={{
+        background: `linear-gradient(135deg, ${model.bg_color || '#1A1A2E'} 0%, #131320 100%)`,
+        borderColor: `${model.color}40`,
+      }}
+    >
       <div className="shrink-0">
         <div className="text-5xl font-extrabold" style={{ color: model.color }}>#1</div>
-        <div className="text-xs text-gray-500 mt-1 text-center">Führt</div>
+        <div className="text-xs text-gray-500 mt-1 text-center">Leading</div>
       </div>
       <div className="flex-1 min-w-0">
         <h2 className="text-xl font-extrabold text-white leading-tight">{model.display_name}</h2>
-        <p className="text-sm mt-0.5" style={{ color: model.color }}>{model.tagline?.split(' – ')[1] || model.tagline}</p>
+        <p className="text-sm mt-0.5" style={{ color: model.color }}>
+          {model.tagline?.split(' – ')[1] || model.tagline}
+        </p>
       </div>
       <div className="text-right shrink-0">
         <div className="text-4xl font-extrabold tabular-nums text-white">{model.total_points}</div>
-        <div className="text-xs text-gray-500 mt-0.5">Punkte</div>
+        <div className="text-xs text-gray-500 mt-0.5">Points</div>
         {gap > 0 && (
-          <div className="text-xs mt-1" style={{ color: model.color }}>+{gap} vor #2</div>
+          <div className="text-xs mt-1" style={{ color: model.color }}>+{gap} ahead of #2</div>
         )}
       </div>
     </div>
@@ -85,7 +102,7 @@ function MiniLeaderboard({ models }) {
           </div>
           <TrendArrow trend={m.trend} />
           <span className="font-bold tabular-nums text-white text-sm w-14 text-right shrink-0">
-            {m.total_points} <span className="text-gray-500 font-normal text-xs">Pkt</span>
+            {m.total_points} <span className="text-gray-500 font-normal text-xs">pts</span>
           </span>
         </div>
       ))}
@@ -99,13 +116,15 @@ function SurpriseTip({ tip }) {
     <div className="card p-4 border-l-4" style={{ borderColor: tip.model_color }}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-base">😮</span>
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Überraschendster Tipp heute</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Most Surprising Tip Today</span>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-bold text-white">{tip.match}</span>
         <span className="font-mono text-lg font-extrabold" style={{ color: tip.model_color }}>{tip.tip}</span>
-        <span className="text-sm text-gray-400">von {tip.model_name}</span>
-        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">+{tip.deviation} Tore vom Konsens</span>
+        <span className="text-sm text-gray-400">by {tip.model_name}</span>
+        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+          +{tip.deviation} goals from consensus
+        </span>
       </div>
       {tip.summary && (
         <p className="text-sm text-gray-400 mt-2 leading-relaxed">{tip.summary}</p>
@@ -116,10 +135,9 @@ function SurpriseTip({ tip }) {
 
 function PointsTimeline({ timeline, models }) {
   if (!timeline || !timeline.length || !models) return (
-    <div className="text-sm text-gray-500 italic">Noch keine Spiele ausgewertet</div>
+    <div className="text-sm text-gray-500 italic">No matches scored yet</div>
   );
 
-  // Group by model
   const byModel = {};
   for (const entry of timeline) {
     if (!byModel[entry.model_id]) byModel[entry.model_id] = [];
@@ -128,7 +146,7 @@ function PointsTimeline({ timeline, models }) {
 
   return (
     <div className="card p-4">
-      <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Punkte-Verlauf</div>
+      <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Points Over Time</div>
       <div className="space-y-3">
         {models.map(m => (
           <div key={m.id} className="flex items-center gap-3">
@@ -155,16 +173,16 @@ function StageBreakdown({ byStage, models }) {
 
   return (
     <div className="card p-4">
-      <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Punkte nach Phase</div>
+      <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Points by Stage</div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-500 text-xs">
-              <th className="text-left pb-2 font-medium">Modell</th>
+              <th className="text-left pb-2 font-medium">Model</th>
               {stages.map(s => (
                 <th key={s} className="text-right pb-2 font-medium">{STAGE_LABELS[s] || s}</th>
               ))}
-              <th className="text-right pb-2 font-semibold text-white">Gesamt</th>
+              <th className="text-right pb-2 font-semibold text-white">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -203,8 +221,8 @@ export default function Rangliste() {
   if (error) return (
     <div className="pt-8 text-center text-red-400">
       <div className="text-4xl mb-3">⚠️</div>
-      <p>Fehler beim Laden: {error}</p>
-      <p className="text-sm text-gray-500 mt-2">Ist der Backend-Server aktiv?</p>
+      <p>Error loading data: {error}</p>
+      <p className="text-sm text-gray-500 mt-2">Is the backend server running?</p>
     </div>
   );
 
@@ -212,16 +230,10 @@ export default function Rangliste() {
 
   return (
     <div className="pt-4 space-y-4 animate-fade-in">
-      {/* Hero: current leader */}
       <LeaderCard model={leader} gap={gap} />
-
-      {/* Mini leaderboard */}
       <MiniLeaderboard models={models} />
-
-      {/* Surprise tip */}
       {surprise_tip && <SurpriseTip tip={surprise_tip} />}
 
-      {/* Below fold */}
       <div className="pt-4 space-y-4">
         <PointsTimeline timeline={timeline} models={models} />
         <StageBreakdown byStage={by_stage} models={models} />
