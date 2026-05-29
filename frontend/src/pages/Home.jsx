@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import MatchCard from '../components/MatchCard.jsx';
 import LiveTicker from '../components/LiveTicker.jsx';
 
+const TOURNAMENT_START = new Date('2026-06-11');
+
 function useFetch(url, interval = 60000) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +23,12 @@ function useFetch(url, interval = 60000) {
   }, [load, interval]);
 
   return { data, loading, error, refresh: load };
+}
+
+function daysUntilTournament() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((TOURNAMENT_START - today) / (1000 * 60 * 60 * 24));
 }
 
 function Sparkline({ points, color, width = 72, height = 24 }) {
@@ -91,9 +99,106 @@ function SectionHeader({ title, count, badge }) {
   );
 }
 
+function PreTournamentBanner({ days }) {
+  return (
+    <div className="card p-5 border-l-4 border-l-indigo-400">
+      <h1 className="font-bold text-gray-900 text-lg leading-tight">
+        5 AI models. 104 matches. Who predicts best?
+      </h1>
+      <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+        Claude Sonnet, GPT-4o, Gemini, Grok, and Mistral each predict every FIFA World Cup 2026 match — scored live against the real results. Every prediction is already locked in before kick-off.
+      </p>
+      {days > 0 && (
+        <div className="mt-3 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-indigo-100">
+          {days} day{days !== 1 ? 's' : ''} until kick-off · Jun 11, 2026
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BonusTipsPreview({ data }) {
+  if (!data?.tips?.length) return null;
+
+  const SHOW_QUESTIONS = ['World Champion 2026', 'Top Scorer 2026'];
+  const byQuestion = {};
+  for (const t of data.tips) {
+    if (!byQuestion[t.question]) byQuestion[t.question] = [];
+    byQuestion[t.question].push(t);
+  }
+
+  const cards = SHOW_QUESTIONS.filter(q => byQuestion[q]);
+  if (!cards.length) return null;
+
+  return (
+    <section>
+      <SectionHeader title="Tournament Picks" badge={
+        <span className="text-xs text-gray-400">What each AI picked before a ball was kicked</span>
+      } />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {cards.map(question => {
+          const tips = byQuestion[question];
+          const activeTips = tips.map(t => {
+            let candidates = [];
+            try { candidates = JSON.parse(t.candidates || '[]'); } catch {}
+            return { ...t, candidates };
+          }).filter(t => t.candidates[0]?.name && !t.candidates[0].name.startsWith('N/A'));
+
+          const pickCounts = {};
+          activeTips.forEach(t => {
+            const pick = t.candidates[0].name;
+            pickCounts[pick] = (pickCounts[pick] || 0) + 1;
+          });
+          const topConsensus = Object.entries(pickCounts).sort((a, b) => b[1] - a[1])[0];
+
+          return (
+            <div key={question} className="card p-4">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <span className="font-semibold text-gray-900 text-sm leading-tight">{question}</span>
+                {topConsensus && (
+                  <span className="badge-consensus whitespace-nowrap flex-shrink-0 text-xs">
+                    {topConsensus[0]} · {topConsensus[1]}/{activeTips.length}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {activeTips.map(t => (
+                  <div key={t.display_name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />
+                      <span className="text-gray-400">{t.display_name}</span>
+                    </div>
+                    <span className="font-medium text-gray-900">{t.candidates[0].name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function groupByLabel(matches) {
+  const STAGE_LABELS = {
+    r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final',
+    sf: 'Semi-final', final: 'Final', '3rd': '3rd Place',
+  };
+  const groups = {};
+  for (const m of matches) {
+    const key = m.group_name ? `Group ${m.group_name}` : (STAGE_LABELS[m.stage] || m.stage);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  }
+  return groups;
+}
+
 export default function Home() {
   const { data: leaderboard, loading: lbLoading } = useFetch('/api/leaderboard', 30000);
   const { data: matches, loading: mLoading, refresh } = useFetch('/api/matches', 30000);
+  const { data: predictedMatches } = useFetch('/api/matches/predicted', 120000);
+  const { data: bonusData } = useFetch('/api/bonus-tips', 120000);
 
   useEffect(() => {
     if (!matches?.live?.length) return;
@@ -105,6 +210,8 @@ export default function Home() {
   const { live = [], today = [], upcoming = [], recent = [] } = matches || {};
   const hasLive = live.length > 0;
   const loading = lbLoading && mLoading;
+  const isPreTournament = !hasLive && !today.length && !recent.length;
+  const days = daysUntilTournament();
 
   if (loading) return (
     <div className="pt-6 space-y-3">
@@ -114,8 +221,13 @@ export default function Home() {
     </div>
   );
 
+  const hasPredictedMatches = predictedMatches && predictedMatches.length > 0;
+  const grouped = hasPredictedMatches ? groupByLabel(predictedMatches) : {};
+
   return (
     <div className="pt-6 space-y-10 animate-fade-in">
+      {isPreTournament && <PreTournamentBanner days={days} />}
+
       <section>
         <SectionHeader title="Standings" />
         <Standings models={models} timeline={timeline} />
@@ -132,30 +244,47 @@ export default function Home() {
         </section>
       )}
 
-      <section>
-        <SectionHeader
-          title="Today"
-          count={today.length}
-          badge={
-            <span className="text-xs text-gray-400">
-              {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
-            </span>
-          }
-        />
-        {today.length ? (
+      {today.length > 0 && (
+        <section>
+          <SectionHeader
+            title="Today"
+            count={today.length}
+            badge={
+              <span className="text-xs text-gray-400">
+                {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
+              </span>
+            }
+          />
           <div className="space-y-3">
             {today.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
-        ) : (
-          <div className="card p-5 text-sm text-gray-400">No matches today</div>
-        )}
-      </section>
+        </section>
+      )}
 
       {upcoming.length > 0 && (
         <section>
           <SectionHeader title="Upcoming" count={upcoming.length} />
           <div className="space-y-3">
             {upcoming.map(m => <MatchCard key={m.id} match={m} />)}
+          </div>
+        </section>
+      )}
+
+      {isPreTournament && hasPredictedMatches && (
+        <section>
+          <SectionHeader
+            title="First Predictions"
+            badge={<span className="text-xs text-gray-400">Click any match to see what each AI picked</span>}
+          />
+          <div className="space-y-5">
+            {Object.entries(grouped).map(([label, groupMatches]) => (
+              <div key={label}>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{label}</h3>
+                <div className="space-y-2">
+                  {groupMatches.map(m => <MatchCard key={m.id} match={m} />)}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -169,12 +298,7 @@ export default function Home() {
         </section>
       )}
 
-      {!hasLive && !today.length && !upcoming.length && !recent.length && (models?.length > 0) && (
-        <div className="pt-4 text-center text-gray-400">
-          <p className="text-base font-medium text-gray-700 mb-1">Tournament starting soon</p>
-          <p className="text-sm">Match predictions will appear here once the group stage begins.</p>
-        </div>
-      )}
+      {isPreTournament && <BonusTipsPreview data={bonusData} />}
     </div>
   );
 }

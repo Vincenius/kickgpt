@@ -6,6 +6,7 @@ import Home from './pages/Home.jsx';
 import KiProfile from './pages/KiProfile.jsx';
 import BonusTips from './pages/BonusTips.jsx';
 import Privacy from './pages/Privacy.jsx';
+import FAQ from './pages/FAQ.jsx';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/ai-profiles" element={<KiProfile />} />
           <Route path="/predictions" element={<BonusTips />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/privacy" element={<Privacy />} />
           {/* Legacy redirects */}
           <Route path="/matches" element={<Navigate to="/" replace />} />

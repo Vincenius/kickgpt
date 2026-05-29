@@ -82,18 +82,6 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 function start() {
   const db = getDb();
 
-  // T-1 day 09:00: re-evaluate tomorrow's matches
-  cron.schedule('0 9 * * *', async () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().slice(0, 10);
-    const matches = db.prepare(`SELECT * FROM matches WHERE match_date = ? AND status = 'SCHEDULED' AND home_team != 'TBD'`).all(dateStr);
-    if (matches.length) {
-      console.log(`[Scheduler] T-1 day run: ${matches.length} matches on ${dateStr}`);
-      await tipMatches(matches, 't-1day');
-    }
-  });
-
   // T-45min: final update per match (runs every minute, checks window)
   cron.schedule('* * * * *', async () => {
     const now = new Date();

@@ -1,4 +1,5 @@
 import React from 'react';
+import MatchCard from '../components/MatchCard.jsx';
 
 function useFetch(url, interval = 60000) {
   const [data, setData] = React.useState(null);
@@ -19,6 +20,40 @@ function useFetch(url, interval = 60000) {
   }, [url, interval]);
 
   return { data, loading, error };
+}
+
+const STAGE_LABELS = {
+  r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final',
+  sf: 'Semi-final', final: 'Final', '3rd': '3rd Place',
+};
+
+function groupPredictedMatches(matches) {
+  const groups = {};
+  for (const m of matches) {
+    const key = m.group_name ? `Group ${m.group_name}` : (STAGE_LABELS[m.stage] || m.stage);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  }
+  return groups;
+}
+
+function MatchPredictions({ matches }) {
+  if (!matches || !matches.length) return null;
+  const grouped = groupPredictedMatches(matches);
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-base font-bold text-gray-700 mb-3">Match Predictions</h2>
+      {Object.entries(grouped).map(([label, groupMatches]) => (
+        <div key={label} className="mb-5">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{label}</h3>
+          <div className="space-y-2">
+            {groupMatches.map(m => <MatchCard key={m.id} match={m} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 const TOURNAMENT_QUESTIONS = ['World Champion 2026', 'Top Scorer 2026', "Top Scorer's Team 2026"];
@@ -105,8 +140,9 @@ function Section({ title, questions, tipsByQuestion, resultsByQuestion }) {
 
 export default function BonusTips() {
   const { data, loading, error } = useFetch('/api/bonus-tips', 120000);
+  const { data: predictedMatches, loading: matchesLoading } = useFetch('/api/matches/predicted', 60000);
 
-  if (loading) return (
+  if (loading && matchesLoading) return (
     <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
       {[...Array(6)].map((_, i) => (
         <div key={i} className="card h-40 animate-pulse" />
@@ -124,13 +160,6 @@ export default function BonusTips() {
   const results = data?.results || [];
   const locked = data?.locked ?? false;
 
-  if (!tips.length) return (
-    <div className="pt-8 text-center text-gray-400">
-      <p className="font-medium">No predictions yet.</p>
-      <p className="text-sm mt-1">Run <code className="bg-gray-100 px-1 rounded">npm run tip:all</code> to generate them.</p>
-    </div>
-  );
-
   const tipsByQuestion = {};
   tips.forEach(t => {
     if (!tipsByQuestion[t.question]) tipsByQuestion[t.question] = [];
@@ -139,6 +168,16 @@ export default function BonusTips() {
 
   const resultsByQuestion = {};
   results.forEach(r => { resultsByQuestion[r.question] = r; });
+
+  const hasBonusTips = tips.length > 0;
+  const hasMatchPredictions = predictedMatches && predictedMatches.length > 0;
+
+  if (!hasBonusTips && !hasMatchPredictions) return (
+    <div className="pt-8 text-center text-gray-400">
+      <p className="font-medium">No predictions yet.</p>
+      <p className="text-sm mt-1">Run <code className="bg-gray-100 px-1 rounded">npm run tip:all</code> to generate them.</p>
+    </div>
+  );
 
   return (
     <div className="pt-4 animate-fade-in">
@@ -154,18 +193,24 @@ export default function BonusTips() {
         )}
       </div>
 
-      <Section
-        title="Tournament"
-        questions={TOURNAMENT_QUESTIONS}
-        tipsByQuestion={tipsByQuestion}
-        resultsByQuestion={resultsByQuestion}
-      />
-      <Section
-        title="Group Winners"
-        questions={GROUP_QUESTIONS}
-        tipsByQuestion={tipsByQuestion}
-        resultsByQuestion={resultsByQuestion}
-      />
+      <MatchPredictions matches={predictedMatches} />
+
+      {hasBonusTips && (
+        <>
+          <Section
+            title="Tournament"
+            questions={TOURNAMENT_QUESTIONS}
+            tipsByQuestion={tipsByQuestion}
+            resultsByQuestion={resultsByQuestion}
+          />
+          <Section
+            title="Group Winners"
+            questions={GROUP_QUESTIONS}
+            tipsByQuestion={tipsByQuestion}
+            resultsByQuestion={resultsByQuestion}
+          />
+        </>
+      )}
     </div>
   );
 }

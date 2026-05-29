@@ -10,8 +10,10 @@
     "start": "node backend/index.js",
     "tip:dry": "node scripts/tip-dry.js",
     "tip:groups": "node scripts/tip-groups.js",
+    "tip:bonus": "node scripts/tip-bonus.js",
     "tip:all": "node scripts/tip-all.js",
-    "db:seed": "node -e \"require('./backend/db').init()\""
+    "db:seed": "node -e \"require('./backend/db').init()\"",
+    "db:clean": "node scripts/db-clean.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

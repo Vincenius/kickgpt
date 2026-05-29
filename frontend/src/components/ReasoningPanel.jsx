@@ -1,4 +1,20 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+
+const mdComponents = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong className="font-semibold text-gray-700">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  h1: ({ children }) => <h2 className="font-bold text-gray-800 text-xs uppercase tracking-wide mt-3 mb-1 first:mt-0">{children}</h2>,
+  h2: ({ children }) => <h2 className="font-bold text-gray-800 text-xs uppercase tracking-wide mt-3 mb-1 first:mt-0">{children}</h2>,
+  h3: ({ children }) => <h3 className="font-semibold text-gray-700 mt-2 mb-0.5 first:mt-0">{children}</h3>,
+  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+  li: ({ children }) => <li>{children}</li>,
+  a: ({ href, children }) => <a href={href} className="text-blue-500 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+  code: ({ children }) => <code className="bg-gray-100 px-1 rounded font-mono text-[11px]">{children}</code>,
+  hr: () => <hr className="border-gray-200 my-2" />,
+};
 
 export default function ReasoningPanel({ tip }) {
   const [expanded, setExpanded] = useState(false);
@@ -36,9 +52,9 @@ export default function ReasoningPanel({ tip }) {
             {expanded ? '▲ Collapse' : '▼ Full analysis'}
           </button>
           {expanded && (
-            <pre className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-3 whitespace-pre-wrap break-words font-mono leading-relaxed animate-fade-in">
-              {tip.reasoning}
-            </pre>
+            <div className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-3 leading-relaxed animate-fade-in">
+              <ReactMarkdown components={mdComponents}>{tip.reasoning}</ReactMarkdown>
+            </div>
           )}
         </>
       )}

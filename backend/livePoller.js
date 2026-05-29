@@ -71,7 +71,7 @@ function updateMatchInDb(db, fdMatch) {
       UPDATE matches SET home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, updated_at = datetime('now')
       WHERE external_id = ?
     `).run(homeTeam, awayTeam, status, homeScore, awayScore, minute, externalId);
-    return existing.status !== status || existing.home_score !== homeScore;
+    return { changed: existing.status !== status || existing.home_score !== homeScore, resolvedMatchId: null };
   } else {
     // Try to match by team names + date
     const matchDate = fdMatch.utcDate?.slice(0, 10);
@@ -87,9 +87,10 @@ function updateMatchInDb(db, fdMatch) {
         UPDATE matches SET external_id = ?, home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, updated_at = datetime('now')
         WHERE id = ?
       `).run(externalId, homeTeam, awayTeam, status, homeScore, awayScore, minute, slot.id);
-      return true;
+      // Return the match ID so the caller can trigger KO predictions
+      return { changed: true, resolvedMatchId: homeTeam !== 'TBD' && awayTeam !== 'TBD' ? slot.id : null };
     }
-    return false;
+    return { changed: false, resolvedMatchId: null };
   }
 }
 
@@ -157,11 +158,24 @@ async function poll() {
     const [liveMatches, todayMatches] = await Promise.all([fetchLiveMatches(), fetchTodayMatches()]);
     const allMatches = [...new Map([...liveMatches, ...todayMatches].map(m => [m.id, m])).values()];
 
+    const resolvedKoIds = [];
     for (const fdMatch of allMatches) {
-      if (updateMatchInDb(db, fdMatch)) updatesM++;
+      const { changed, resolvedMatchId } = updateMatchInDb(db, fdMatch);
+      if (changed) updatesM++;
+      if (resolvedMatchId) resolvedKoIds.push(resolvedMatchId);
     }
 
     updatesM += updateScoresForFinished(db);
+
+    // Auto-predict KO matches as soon as their teams are confirmed
+    if (resolvedKoIds.length) {
+      const { triggerKoAdvance } = require('./scheduler');
+      for (const matchId of resolvedKoIds) {
+        triggerKoAdvance(matchId).catch(err =>
+          console.error(`[LivePoller] KO auto-tip failed for match ${matchId}:`, err.message)
+        );
+      }
+    }
 
     if (pollerInterval) clearTimeout(pollerInterval);
     pollerInterval = setTimeout(poll, getPollingInterval(db));

@@ -5,6 +5,7 @@ const TABS = [
   { to: '/', label: 'Home' },
   { to: '/predictions', label: 'Predictions' },
   { to: '/ai-profiles', label: 'AI Profiles' },
+  { to: '/faq', label: 'FAQ' },
 ];
 
 export default function Navbar() {

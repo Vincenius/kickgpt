@@ -235,6 +235,18 @@ router.get('/model/:id', withDb((req, res, db) => {
   res.json({ ...model, tips });
 }));
 
+// GET /api/matches/predicted – all matches that have at least one tip, regardless of date
+router.get('/matches/predicted', withDb((req, res, db) => {
+  const matches = db.prepare(`
+    SELECT DISTINCT ma.* FROM matches ma
+    JOIN tips t ON t.match_id = ma.id
+    ORDER BY ma.match_date, ma.id
+  `).all();
+
+  if (!matches.length) return res.json([]);
+  res.json(enrichMatches(db, matches));
+}));
+
 // GET /api/bonus-tips
 router.get('/bonus-tips', withDb((req, res, db) => {
   const tips = db.prepare(`

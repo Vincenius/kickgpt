@@ -2,7 +2,7 @@
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-4-8'; // Claude Opus 4.8
+const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
@@ -29,29 +29,53 @@ Return ONLY valid JSON:
 async function predict(match, triggerType = 'initial') {
   const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 2048,
-    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-    messages: [{ role: 'user', content: buildPrompt(match, triggerType) }],
-  });
+  const messages = [{ role: 'user', content: buildPrompt(match, triggerType) }];
+  let response;
 
-  const textBlock = response.content.find(b => b.type === 'text');
-  if (!textBlock) throw new Error('No text in Claude response');
-
-  const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    const fs = require('fs');
-    const path = require('path');
-    const logDir = path.join(__dirname, '..', '..', 'data');
-    const logPath = path.join(logDir, 'claude_errors.txt');
-    const entry = `\n--- ${new Date().toISOString()} | ${match.home_team} vs ${match.away_team} ---\n${textBlock.text}\n`;
-    fs.appendFileSync(logPath, entry);
-    throw new Error('No JSON in Claude response');
+  // Server-side web_search runs internally; loop if it hits the iteration limit (pause_turn).
+  // Retry up to 3 times on rate limit (429) with 65s backoff each attempt.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      for (let iter = 0; iter < 10; iter++) {
+        response = await client.messages.create({
+          model: MODEL,
+          max_tokens: 4096,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages,
+        });
+        if (response.stop_reason !== 'pause_turn') break;
+        messages.push({ role: 'assistant', content: response.content });
+      }
+      break; // success
+    } catch (err) {
+      if (err?.status === 429 && attempt < 2) {
+        const waitMs = 65000 * (attempt + 1);
+        console.warn(`  claude: rate limited, retrying in ${waitMs / 1000}s…`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      throw err;
+    }
   }
 
-  const parsed = JSON.parse(jsonMatch[0]);
-  return validateTip(parsed, match);
+  // The response may contain multiple text blocks: an intro, then the final answer.
+  // Search from last to first so we find the block that contains the JSON.
+  const textBlocks = response.content.filter(b => b.type === 'text');
+  for (let i = textBlocks.length - 1; i >= 0; i--) {
+    const jsonMatch = textBlocks[i].text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return validateTip(parsed, match);
+    }
+  }
+
+  const fs = require('fs');
+  const path = require('path');
+  const allText = textBlocks.map(b => b.text).join('\n---\n');
+  const logPath = path.join(__dirname, '..', '..', 'data', 'claude_errors.txt');
+  const entry = `\n--- ${new Date().toISOString()} | ${match.home_team} vs ${match.away_team} ---\n${allText}\n`;
+  fs.appendFileSync(logPath, entry);
+  throw new Error('No JSON in Claude response');
 }
 
 function validateTip(parsed, match) {

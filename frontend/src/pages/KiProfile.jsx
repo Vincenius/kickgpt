@@ -60,28 +60,6 @@ export default function KiProfile() {
           <ModelCard key={model.id} model={model} />
         ))}
       </div>
-
-      <div className="mt-8 card p-5">
-        <h2 className="font-semibold text-gray-900 mb-4">How scoring works</h2>
-        <div className="space-y-4 text-sm text-gray-500">
-          <div>
-            <p className="font-medium text-gray-800">Kicktipp scoring</p>
-            <p className="mt-0.5">Exact result = 4 pts · Correct goal difference = 3 pts · Correct tendency = 2 pts</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-800">Prediction schedule</p>
-            <p className="mt-0.5">T-1 day at 09:00, then again 45 minutes before kick-off with the latest lineups.</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-800">OddsBot</p>
-            <p className="mt-0.5">Uses a Dixon-Coles Poisson model with live betting odds — no LLM involved.</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-800">Knockout rounds</p>
-            <p className="mt-0.5">As soon as a team qualifies, all models automatically predict their next match.</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

@@ -27,15 +27,19 @@ Return ONLY valid JSON (no markdown, no code block):
 }
 
 function extractText(response) {
+  // Collect text from ALL message.output blocks — the model may emit text before
+  // and after tool calls, so the JSON is typically in the last block.
+  const parts = [];
   for (const output of response.outputs || []) {
     if (output.type === 'message.output') {
-      if (typeof output.content === 'string') return output.content;
-      if (Array.isArray(output.content)) {
-        return output.content.map(c => c.text ?? String(c)).join('');
+      if (typeof output.content === 'string') {
+        parts.push(output.content);
+      } else if (Array.isArray(output.content)) {
+        parts.push(output.content.map(c => c.text ?? String(c)).join(''));
       }
     }
   }
-  return '';
+  return parts.join('\n');
 }
 
 async function predict(match, triggerType = 'initial') {
@@ -55,7 +59,22 @@ async function predict(match, triggerType = 'initial') {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('No JSON in Mistral response');
 
-  const parsed = JSON.parse(jsonMatch[0]);
+  // Mistral sometimes emits raw newlines/tabs inside JSON string values — sanitize them
+  const sanitized = jsonMatch[0].replace(/"(?:[^"\\]|\\.)*"/gs, (str) =>
+    str.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+  );
+
+  let parsed;
+  try {
+    parsed = JSON.parse(sanitized);
+  } catch (err) {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '..', '..', 'data', 'mistral_errors.txt');
+    const entry = `\n--- ${new Date().toISOString()} | JSON parse error: ${err.message} ---\n${jsonMatch[0]}\n`;
+    fs.appendFileSync(logPath, entry);
+    throw new Error(`JSON parse error: ${err.message}`);
+  }
   return validateTip(parsed);
 }
 

@@ -15,16 +15,16 @@ function getDb() {
 const MODELS = [
   {
     name: 'claude',
-    display_name: 'Claude Opus 4.8',
+    display_name: 'Claude Haiku 4.5',
     tagline: 'The Strategist – analyzes deeply, picks precisely',
-    description: 'Anthropic\'s flagship model with deep reasoning and web search',
+    description: 'Anthropic\'s fast and efficient model with web search',
     color: '#8B5CF6',
     bg_color: '#1E1040',
     api_type: 'claude',
   },
   {
     name: 'gpt',
-    display_name: 'GPT-5.5',
+    display_name: 'GPT-4o',
     tagline: 'The All-Rounder – broadly informed, rarely surprised',
     description: 'OpenAI\'s versatile model with broad knowledge and web search',
     color: '#10B981',

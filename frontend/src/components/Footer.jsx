@@ -28,9 +28,20 @@ export default function Footer() {
           >
             vincentwill.com
           </a>
+          <Link to="/faq" className="hover:text-gray-600 transition-colors">
+            FAQ
+          </Link>
           <Link to="/privacy" className="hover:text-gray-600 transition-colors">
             Privacy Policy
           </Link>
+          <a
+            href="https://github.com/Vincenius/kickgpt"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-600 transition-colors"
+          >
+            GitHub
+          </a>
           <a
             href="https://ko-fi.com/wweb_dev"
             target="_blank"

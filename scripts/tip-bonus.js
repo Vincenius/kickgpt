@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-// Tip all group stage matches + generate bonus_tips.json
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { init } = require('../backend/db');
-const { tipMatches, saveTip } = require('../backend/scheduler');
 
 const TOURNAMENT_START = '2026-06-11';
 
@@ -24,7 +22,7 @@ const BONUS_QUESTIONS = [
   'Group I Winner',
   'Group J Winner',
   'Group K Winner',
-  'Group L Winner', // 15 total: champion + top scorer + top scorer's team + 12 group winners
+  'Group L Winner',
 ];
 
 const BONUS_PROMPT = (question) => `You are competing in an AI prediction tournament for FIFA WM 2026.
@@ -43,37 +41,6 @@ Return ONLY valid JSON:
   ]
 }`;
 
-async function tipBonusQuestion(question, predictors, ENV_KEYS) {
-  const results = {};
-
-  for (const [name, predictor] of Object.entries(predictors)) {
-    if (!process.env[ENV_KEYS[name]]) continue;
-
-    try {
-      // Use a fake "match" object to pass the bonus prompt
-      const fakeMatch = {
-        home_team: question, away_team: '', match_date: '2026-07-19',
-        stage: 'bonus', group_name: null, matchday: null,
-        id: null,
-      };
-
-      // Call predict with the bonus prompt by passing the question as home_team
-      // Actually, let's call the API directly for bonus questions
-      const text = await callModelForBonus(name, BONUS_PROMPT(question));
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        results[name] = parsed;
-        console.log(`  ${name}: ✓`);
-      }
-    } catch (err) {
-      console.error(`  ${name}: ERROR – ${err.message}`);
-    }
-  }
-
-  return results;
-}
-
 async function callModelForBonus(modelName, prompt) {
   if (modelName === 'claude') {
     const Anthropic = require('@anthropic-ai/sdk');
@@ -82,7 +49,7 @@ async function callModelForBonus(modelName, prompt) {
     let r;
     for (let iter = 0; iter < 10; iter++) {
       r = await client.messages.create({
-        model: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
+        model: process.env.CLAUDE_MODEL || 'claude-opus-4-8',
         max_tokens: 2048,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages,
@@ -90,8 +57,7 @@ async function callModelForBonus(modelName, prompt) {
       if (r.stop_reason !== 'pause_turn') break;
       messages.push({ role: 'assistant', content: r.content });
     }
-    const textBlocks = r.content.filter(b => b.type === 'text');
-    return textBlocks.map(b => b.text).join('\n');
+    return r.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
   }
   if (modelName === 'gpt') {
     const OpenAI = require('openai');
@@ -155,21 +121,6 @@ async function main() {
     mistral: 'MISTRAL_API_KEY',
   };
 
-  const predictors = {
-    claude: require('../backend/predictor/claude'),
-    gpt: require('../backend/predictor/openai'),
-    gemini: require('../backend/predictor/gemini'),
-    grok: require('../backend/predictor/grok'),
-    terminator: require('../backend/predictor/terminator'),
-    mistral: require('../backend/predictor/mistral'),
-  };
-
-  // 1. Tip all group stage matches
-  const matches = db.prepare(`SELECT * FROM matches WHERE stage = 'group' AND home_team != 'TBD' ORDER BY matchday, group_name, id`).all();
-  console.log(`\n🌍 Step 1: Tipping ${matches.length} group stage matches...\n`);
-  await tipMatches(matches, 'initial');
-
-  // 2. Tip bonus questions — locked once tournament starts
   const today = new Date().toISOString().split('T')[0];
   const tournamentStarted = today >= TOURNAMENT_START ||
     db.prepare("SELECT COUNT(*) as c FROM matches WHERE status != 'SCHEDULED'").get().c > 0;
@@ -180,40 +131,47 @@ async function main() {
     process.exit(0);
   }
 
-  console.log(`\nStep 2: Tipping ${BONUS_QUESTIONS.length} bonus questions...\n`);
+  console.log(`\nTipping ${BONUS_QUESTIONS.length} bonus questions...\n`);
   const bonusResults = {};
 
   for (const question of BONUS_QUESTIONS) {
     console.log(`\n❓ ${question}`);
-    const results = await tipBonusQuestion(question, predictors, ENV_KEYS);
-    bonusResults[question] = results;
 
-    // Save to DB
-    for (const [modelName, result] of Object.entries(results)) {
-      const model = db.prepare('SELECT id FROM models WHERE name = ?').get(modelName);
-      if (!model) continue;
-      db.prepare(`
-        INSERT INTO bonus_tips (model_id, question, candidates, reasoning)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT(model_id, question) DO UPDATE SET candidates = ?, reasoning = ?
-      `).run(
-        model.id, question,
-        JSON.stringify(result.candidates),
-        result.candidates?.[0]?.reasoning || '',
-        JSON.stringify(result.candidates),
-        result.candidates?.[0]?.reasoning || '',
-      );
+    for (const [name, envKey] of Object.entries(ENV_KEYS)) {
+      if (!process.env[envKey]) continue;
+      try {
+        const text = await callModelForBonus(name, BONUS_PROMPT(question));
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) { console.error(`  ${name}: no JSON found`); continue; }
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (!bonusResults[question]) bonusResults[question] = {};
+        bonusResults[question][name] = parsed;
+        console.log(`  ${name}: ✓`);
+
+        const model = db.prepare('SELECT id FROM models WHERE name = ?').get(name);
+        if (model) {
+          db.prepare(`
+            INSERT INTO bonus_tips (model_id, question, candidates, reasoning)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(model_id, question) DO UPDATE SET candidates = ?, reasoning = ?
+          `).run(
+            model.id, question,
+            JSON.stringify(parsed.candidates),
+            parsed.candidates?.[0]?.reasoning || '',
+            JSON.stringify(parsed.candidates),
+            parsed.candidates?.[0]?.reasoning || '',
+          );
+        }
+      } catch (err) {
+        console.error(`  ${name}: ERROR – ${err.message}`);
+      }
     }
   }
 
-  // Save to bonus_tips.json
   const outPath = path.join(__dirname, '..', 'data', 'bonus_tips.json');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(bonusResults, null, 2));
   console.log(`\n✓ Bonus tips saved to ${outPath}`);
-
-  const tipCount = db.prepare('SELECT COUNT(*) as c FROM tips').get().c;
-  console.log(`✓ ${tipCount} match tips in database`);
   console.log(`✓ ${BONUS_QUESTIONS.length} bonus questions processed\n`);
   process.exit(0);
 }

@@ -2,7 +2,7 @@
 require('dotenv').config();
 const OpenAI = require('openai');
 
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5.5';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };

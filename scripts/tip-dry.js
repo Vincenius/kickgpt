@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 'use strict';
-// Dry run: tip Group A matches only, no DB writes, console output
+// Tip Group A matches for all models and save results to DB
 require('dotenv').config();
 const { init, getDb } = require('../backend/db');
+const { saveTip } = require('../backend/scheduler');
+
 const predictors = {
   claude: require('../backend/predictor/claude'),
   gpt: require('../backend/predictor/openai'),
   gemini: require('../backend/predictor/gemini'),
   grok: require('../backend/predictor/grok'),
   terminator: require('../backend/predictor/terminator'),
+  mistral: require('../backend/predictor/mistral'),
 };
 
 const ENV_KEYS = {
@@ -17,19 +20,35 @@ const ENV_KEYS = {
   gemini: 'GEMINI_API_KEY',
   grok: 'GROK_API_KEY',
   terminator: 'ODDS_API_KEY',
+  mistral: 'MISTRAL_API_KEY',
 };
 
 async function main() {
+  // --model <name> to run only one predictor, e.g. node tip-dry.js --model mistral
+  const modelFlag = (() => {
+    const i = process.argv.indexOf('--model');
+    return i !== -1 ? process.argv[i + 1] : null;
+  })();
+
+  if (modelFlag && !predictors[modelFlag]) {
+    console.error(`Unknown model "${modelFlag}". Available: ${Object.keys(predictors).join(', ')}`);
+    process.exit(1);
+  }
+
   init();
   const db = getDb();
 
   const matches = db.prepare(`SELECT * FROM matches WHERE group_name = 'A' ORDER BY matchday, id`).all();
-  console.log(`\n🔍 DRY RUN – Group A (${matches.length} matches)\n${'─'.repeat(60)}`);
+  console.log(`\n⚽ Group A – ${matches.length} matches${modelFlag ? ` (model: ${modelFlag})` : ''}\n${'─'.repeat(60)}`);
 
   for (const match of matches) {
-    console.log(`\n⚽ ${match.home_team} vs ${match.away_team} (${match.match_date})`);
+    console.log(`\n${match.home_team} vs ${match.away_team} (${match.match_date})`);
 
-    for (const [name, predictor] of Object.entries(predictors)) {
+    const activeEntries = modelFlag
+      ? Object.entries(predictors).filter(([name]) => name === modelFlag)
+      : Object.entries(predictors);
+
+    for (const [name, predictor] of activeEntries) {
       if (!process.env[ENV_KEYS[name]]) {
         console.log(`  ${name}: SKIPPED (no API key)`);
         continue;
@@ -37,7 +56,8 @@ async function main() {
 
       try {
         const tip = await predictor.predict(match, 'initial');
-        console.log(`  ${name}: ${tip.home}:${tip.away} (confidence: ${tip.confidence}%)`);
+        saveTip(db, match, name, tip, 'initial');
+        console.log(`  ${name}: ${tip.home}:${tip.away} (${tip.confidence}%) ✓`);
         console.log(`    → ${tip.summary}`);
       } catch (err) {
         console.error(`  ${name}: ERROR – ${err.message}`);
@@ -45,7 +65,8 @@ async function main() {
     }
   }
 
-  console.log('\n✓ Dry run complete. No DB writes were made.\n');
+  const tipCount = db.prepare('SELECT COUNT(*) as c FROM tips').get().c;
+  console.log(`\n✓ Done! ${tipCount} tips in database.\n`);
   process.exit(0);
 }
 
