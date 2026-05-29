@@ -55,7 +55,6 @@ function getModels() {
     gemini: require('./predictor/gemini'),
     grok: require('./predictor/grok'),
     terminator: require('./predictor/terminator'),
-    mistral: require('./predictor/mistral'),
   };
 }
 
@@ -74,7 +73,7 @@ async function tipMatches(matches, triggerType) {
 }
 
 function envKey(name) {
-  return { claude: 'ANTHROPIC_API_KEY', gpt: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY', grok: 'GROK_API_KEY', terminator: 'ODDS_API_KEY', mistral: 'MISTRAL_API_KEY' }[name];
+  return { claude: 'ANTHROPIC_API_KEY', gpt: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY', grok: 'GROK_API_KEY', terminator: 'ODDS_API_KEY' }[name];
 }
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -150,7 +149,7 @@ async function triggerKoAdvance(matchId) {
   if (!match || match.home_team === 'TBD' || match.away_team === 'TBD') return;
 
   const alreadyTipped = db.prepare('SELECT COUNT(*) as c FROM tips WHERE match_id = ?').get(matchId).c;
-  if (alreadyTipped === 6) return; // all models already have tips
+  if (alreadyTipped === 5) return; // all models already have tips
 
   console.log(`[Scheduler] KO advance tip: ${match.home_team} vs ${match.away_team}`);
   await tipMatches([match], 'ko-advance');

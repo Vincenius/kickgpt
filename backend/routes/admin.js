@@ -10,7 +10,7 @@ const { generateDailyImage } = require('../imageGen');
 const path = require('path');
 const fs = require('fs');
 
-const ALLOWED_PREDICTOR_FILES = new Set(['claude', 'openai', 'gemini', 'grok', 'terminator', 'mistral']);
+const ALLOWED_PREDICTOR_FILES = new Set(['claude', 'openai', 'gemini', 'grok', 'terminator']);
 
 function auth(req, res, next) {
   const pass = req.headers['x-admin-password'] || req.query.password;

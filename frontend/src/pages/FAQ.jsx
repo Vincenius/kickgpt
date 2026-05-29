@@ -61,7 +61,6 @@ const FAQS = [
               <li><span className="font-semibold">GPT-4o mini</span> (OpenAI) — with web browsing / search tools</li>
               <li><span className="font-semibold">Gemini</span> (Google) — with Google Search grounding</li>
               <li><span className="font-semibold">Grok</span> (xAI) — with real-time X/Twitter data access</li>
-              <li><span className="font-semibold">Mistral</span> (Mistral AI) — with web search tools</li>
               <li><span className="font-semibold">OddsBot</span> — a pure math model, no LLM (see below)</li>
             </ul>
           </div>

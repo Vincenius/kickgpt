@@ -11,7 +11,6 @@ const predictors = {
   gemini: require('../backend/predictor/gemini'),
   grok: require('../backend/predictor/grok'),
   terminator: require('../backend/predictor/terminator'),
-  mistral: require('../backend/predictor/mistral'),
 };
 
 const ENV_KEYS = {
@@ -20,11 +19,10 @@ const ENV_KEYS = {
   gemini: 'GEMINI_API_KEY',
   grok: 'GROK_API_KEY',
   terminator: 'ODDS_API_KEY',
-  mistral: 'MISTRAL_API_KEY',
 };
 
 async function main() {
-  // --model <name> to run only one predictor, e.g. node tip-dry.js --model mistral
+  // --model <name> to run only one predictor, e.g. node tip-dry.js --model gpt
   const modelFlag = (() => {
     const i = process.argv.indexOf('--model');
     return i !== -1 ? process.argv[i + 1] : null;

@@ -50,15 +50,6 @@ const MODELS = [
     api_type: 'grok',
   },
   {
-    name: 'mistral',
-    display_name: 'Mistral Large 3',
-    tagline: 'The Europeen – sharp reasoning, live web search',
-    description: "Mistral's flagship model with built-in web search via the Agents API",
-    color: '#F59E0B',
-    bg_color: '#1C1400',
-    api_type: 'mistral',
-  },
-  {
     name: 'terminator',
     display_name: 'OddsBot',
     tagline: 'The Machine – pure math, no gut feeling',

@@ -119,25 +119,6 @@ async function callModelForBonus(modelName, prompt) {
   if (modelName === 'terminator') {
     return JSON.stringify({ question: prompt, candidates: [{ name: 'N/A – algorithm cannot answer bonus questions', probability: 0, reasoning: 'OddsBot only predicts match scores using statistical models.' }] });
   }
-  if (modelName === 'mistral') {
-    const { Mistral } = require('@mistralai/mistralai');
-    const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
-    const r = await client.beta.conversations.start({
-      model: process.env.MISTRAL_MODEL || 'mistral-large-latest',
-      tools: [{ type: 'web_search' }],
-      inputs: prompt,
-      store: false,
-    });
-    const parts = [];
-    for (const output of r.outputs || []) {
-      if (output.type === 'message.output') {
-        if (typeof output.content === 'string') parts.push(output.content);
-        else if (Array.isArray(output.content)) parts.push(output.content.map(c => c.text ?? String(c)).join(''));
-      }
-    }
-    if (parts.length) return parts.join('\n');
-    throw new Error('No text in Mistral response');
-  }
   throw new Error(`Unknown model: ${modelName}`);
 }
 
@@ -152,7 +133,6 @@ async function main() {
     gemini: 'GEMINI_API_KEY',
     grok: 'GROK_API_KEY',
     terminator: 'ODDS_API_KEY',
-    mistral: 'MISTRAL_API_KEY',
   };
 
   const predictors = {
@@ -161,7 +141,6 @@ async function main() {
     gemini: require('../backend/predictor/gemini'),
     grok: require('../backend/predictor/grok'),
     terminator: require('../backend/predictor/terminator'),
-    mistral: require('../backend/predictor/mistral'),
   };
 
   // 1. Tip all group stage matches
