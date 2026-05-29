@@ -82,13 +82,13 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 function start() {
   const db = getDb();
 
-  // T-45min: final update per match (runs every minute, checks window)
+  // T-45min: final update for KO matches only (group stage is handled round-by-round)
   cron.schedule('* * * * *', async () => {
     const now = new Date();
     const windowStart = new Date(now.getTime() + 44 * 60 * 1000).toISOString().slice(0, 16);
     const windowEnd = new Date(now.getTime() + 46 * 60 * 1000).toISOString().slice(0, 16);
     const matches = db.prepare(`
-      SELECT * FROM matches WHERE status = 'SCHEDULED' AND home_team != 'TBD'
+      SELECT * FROM matches WHERE status = 'SCHEDULED' AND home_team != 'TBD' AND stage != 'group'
       AND match_date || 'T' || COALESCE(match_time, '20:00') BETWEEN ? AND ?
     `).all(windowStart, windowEnd);
 
@@ -101,16 +101,59 @@ function start() {
   console.log('[Scheduler] Cron jobs registered');
 }
 
+// Tracks which group/matchday combos have already been triggered this process lifetime.
+// The alreadyTipped DB check prevents double-tipping across restarts.
+const triggeredRounds = new Set();
+
+async function checkGroupRounds() {
+  const db = getDb();
+  const groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+
+  for (const group of groups) {
+    for (const nextMd of [2, 3]) {
+      const key = `${group}-${nextMd}`;
+      if (triggeredRounds.has(key)) continue;
+
+      const prevMd = nextMd - 1;
+      const prev = db.prepare(`
+        SELECT COUNT(*) as total, SUM(CASE WHEN status = 'FINISHED' THEN 1 ELSE 0 END) as done
+        FROM matches WHERE stage = 'group' AND group_name = ? AND matchday = ?
+      `).get(group, prevMd);
+
+      if (!prev || prev.total === 0 || prev.done < prev.total) continue;
+
+      const alreadyTipped = db.prepare(`
+        SELECT COUNT(DISTINCT t.match_id) as c FROM tips t
+        JOIN matches ma ON ma.id = t.match_id
+        WHERE ma.stage = 'group' AND ma.group_name = ? AND ma.matchday = ?
+      `).get(group, nextMd).c;
+
+      if (alreadyTipped > 0) { triggeredRounds.add(key); continue; }
+
+      triggeredRounds.add(key);
+      const matches = db.prepare(
+        `SELECT * FROM matches WHERE stage = 'group' AND group_name = ? AND matchday = ? ORDER BY id`
+      ).all(group, nextMd);
+      if (!matches.length) continue;
+
+      console.log(`[Scheduler] Group ${group} MD${prevMd} complete — predicting MD${nextMd}`);
+      tipMatches(matches, 'md-advance').catch(err =>
+        console.error(`[Scheduler] Group ${group} MD${nextMd} prediction failed:`, err.message)
+      );
+    }
+  }
+}
+
 async function triggerKoAdvance(matchId) {
   const db = getDb();
   const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
   if (!match || match.home_team === 'TBD' || match.away_team === 'TBD') return;
 
   const alreadyTipped = db.prepare('SELECT COUNT(*) as c FROM tips WHERE match_id = ?').get(matchId).c;
-  if (alreadyTipped === 5) return; // all models already have tips
+  if (alreadyTipped === 6) return; // all models already have tips
 
   console.log(`[Scheduler] KO advance tip: ${match.home_team} vs ${match.away_team}`);
   await tipMatches([match], 'ko-advance');
 }
 
-module.exports = { start, tipMatches, saveTip, triggerKoAdvance };
+module.exports = { start, tipMatches, saveTip, triggerKoAdvance, checkGroupRounds };

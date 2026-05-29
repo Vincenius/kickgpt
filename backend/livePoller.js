@@ -64,13 +64,15 @@ function updateMatchInDb(db, fdMatch) {
   const awayScore = fdMatch.score?.fullTime?.away ?? null;
   const minute = fdMatch.minute ?? null;
 
+  const matchTime = fdMatch.utcDate?.slice(11, 16) || null; // "HH:MM" in UTC
+
   const existing = db.prepare('SELECT id, home_score, away_score, status FROM matches WHERE external_id = ?').get(externalId);
 
   if (existing) {
     db.prepare(`
-      UPDATE matches SET home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, updated_at = datetime('now')
+      UPDATE matches SET home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, match_time = COALESCE(?, match_time), updated_at = datetime('now')
       WHERE external_id = ?
-    `).run(homeTeam, awayTeam, status, homeScore, awayScore, minute, externalId);
+    `).run(homeTeam, awayTeam, status, homeScore, awayScore, minute, matchTime, externalId);
     return { changed: existing.status !== status || existing.home_score !== homeScore, resolvedMatchId: null };
   } else {
     // Try to match by team names + date
@@ -84,9 +86,9 @@ function updateMatchInDb(db, fdMatch) {
 
     if (slot) {
       db.prepare(`
-        UPDATE matches SET external_id = ?, home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, updated_at = datetime('now')
+        UPDATE matches SET external_id = ?, home_team = ?, away_team = ?, status = ?, home_score = ?, away_score = ?, minute = ?, match_time = COALESCE(?, match_time), updated_at = datetime('now')
         WHERE id = ?
-      `).run(externalId, homeTeam, awayTeam, status, homeScore, awayScore, minute, slot.id);
+      `).run(externalId, homeTeam, awayTeam, status, homeScore, awayScore, minute, matchTime, slot.id);
       // Return the match ID so the caller can trigger KO predictions
       return { changed: true, resolvedMatchId: homeTeam !== 'TBD' && awayTeam !== 'TBD' ? slot.id : null };
     }
@@ -167,9 +169,14 @@ async function poll() {
 
     updatesM += updateScoresForFinished(db);
 
+    // Auto-predict next group matchday when the previous one is fully finished
+    const { checkGroupRounds, triggerKoAdvance } = require('./scheduler');
+    checkGroupRounds().catch(err =>
+      console.error('[LivePoller] Group round check failed:', err.message)
+    );
+
     // Auto-predict KO matches as soon as their teams are confirmed
     if (resolvedKoIds.length) {
-      const { triggerKoAdvance } = require('./scheduler');
       for (const matchId of resolvedKoIds) {
         triggerKoAdvance(matchId).catch(err =>
           console.error(`[LivePoller] KO auto-tip failed for match ${matchId}:`, err.message)

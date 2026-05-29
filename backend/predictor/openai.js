@@ -2,7 +2,7 @@
 require('dotenv').config();
 const OpenAI = require('openai');
 
-const MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 function buildPrompt(match, triggerType) {
   const stageMap = { group: 'Group Stage', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-final', sf: 'Semi-final', final: 'Final', '3rd': '3rd Place' };
@@ -18,12 +18,13 @@ Research: current form, injuries, suspensions, head-to-head, tournament context,
 
 Return ONLY valid JSON:
 {
-  "home": <int>,
-  "away": <int>,
+  "home": <int, goals for ${match.home_team}>,
+  "away": <int, goals for ${match.away_team}>,
   "confidence": <0-100>,
   "summary": "<2-3 sentences: key reason, written for a curious non-expert audience>",
   "reasoning": "<full research trace: sources, odds found, injuries, form, why this scoreline maximizes expected points>"
-}`;
+}
+IMPORTANT: "home" = ${match.home_team} goals, "away" = ${match.away_team} goals. Your summary and reasoning MUST reflect the team your score predicts to win (or a draw). Do not write that one team is favored if your score shows the other team winning.`;
 }
 
 async function predict(match, triggerType = 'initial') {

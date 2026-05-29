@@ -24,9 +24,9 @@ const MODELS = [
   },
   {
     name: 'gpt',
-    display_name: 'GPT-4o',
+    display_name: 'GPT-4o mini',
     tagline: 'The All-Rounder – broadly informed, rarely surprised',
-    description: 'OpenAI\'s versatile model with broad knowledge and web search',
+    description: 'OpenAI\'s efficient model with broad knowledge and web search',
     color: '#10B981',
     bg_color: '#052E1C',
     api_type: 'openai',
@@ -177,6 +177,7 @@ const SCHEMA = `
     stage TEXT NOT NULL,
     group_name TEXT,
     match_date TEXT,
+    match_time TEXT,
     matchday INTEGER,
     venue TEXT,
     home_score INTEGER,
@@ -269,6 +270,7 @@ function init() {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  try { db.exec('ALTER TABLE matches ADD COLUMN match_time TEXT'); } catch (_) {}
 
   seedModels();
   seedMatches();

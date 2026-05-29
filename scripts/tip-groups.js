@@ -11,11 +11,11 @@ async function main() {
   const db = getDb();
 
   const matches = db.prepare(`
-    SELECT * FROM matches WHERE stage = 'group' AND home_team != 'TBD'
-    ORDER BY matchday, group_name, id
+    SELECT * FROM matches WHERE stage = 'group' AND matchday = 1 AND home_team != 'TBD'
+    ORDER BY group_name, id
   `).all();
 
-  console.log(`\n🌍 Tipping ${matches.length} group stage matches for all AI models`);
+  console.log(`\n🌍 Tipping ${matches.length} MD1 matches (MD2/3 auto-trigger after results)`);
   console.log(`${'─'.repeat(60)}\n`);
 
   await tipMatches(matches, 'initial');

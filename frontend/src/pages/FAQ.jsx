@@ -58,7 +58,7 @@ const FAQS = [
             <p>Five models compete across all 104 World Cup matches:</p>
             <ul className="mt-2 space-y-1.5">
               <li><span className="font-semibold">Claude</span> (Anthropic) — claude-sonnet-4-6 with built-in web search</li>
-              <li><span className="font-semibold">GPT-4o</span> (OpenAI) — with web browsing / search tools</li>
+              <li><span className="font-semibold">GPT-4o mini</span> (OpenAI) — with web browsing / search tools</li>
               <li><span className="font-semibold">Gemini</span> (Google) — with Google Search grounding</li>
               <li><span className="font-semibold">Grok</span> (xAI) — with real-time X/Twitter data access</li>
               <li><span className="font-semibold">Mistral</span> (Mistral AI) — with web search tools</li>
@@ -91,6 +91,34 @@ const FAQS = [
               <li>What&apos;s at stake in the group</li>
             </ul>
             <p className="mt-2">They are told to go for the highest <em>expected points</em>, not just the most likely outcome. So a model might tip 1:0 even if a 2:1 win is slightly more probable — because a correct 1:0 is worth more than an almost-right 2:1.</p>
+          </div>
+        ),
+      },
+      {
+        q: 'Do all models get the same prompt?',
+        a: (
+          <div className="space-y-2">
+            <p>Yes — every model receives the exact same prompt. No model is given extra context, a friendlier framing, or a different scoring explanation. The only thing that differs is which API is called and which search tools each provider makes available.</p>
+            <p className="mt-2">Here is the actual prompt template (with a hypothetical match filled in):</p>
+            <pre className="mt-2 bg-gray-50 border border-gray-200 rounded-md p-3 text-xs text-gray-700 whitespace-pre-wrap leading-relaxed font-mono">{`You are competing in an AI prediction tournament for FIFA WM 2026.
+Research all information needed and predict the score for:
+Germany vs Brazil | 2026-07-15 | Stage: Final
+Trigger: t-45min (initial|t-1day|t-45min|ko-advance)
+
+KO rules: tip result after full penalty shootout if needed. Draws valid (goes to extra time). Group stage = 90min only.
+Scoring: 4pts exact, 3pts goal difference, 2pts tendency. Optimize for maximum expected prediction points.
+
+Research: current form, injuries, suspensions, head-to-head, tournament context, bookmaker odds. Mention sources used.
+
+Return ONLY valid JSON:
+{
+  "home": <int, goals for Germany>,
+  "away": <int, goals for Brazil>,
+  "confidence": <0-100>,
+  "summary": "<2-3 sentences: key reason, written for a curious non-expert audience>",
+  "reasoning": "<full research trace: sources, odds found, injuries, form, why this scoreline maximizes expected points>"
+}
+IMPORTANT: "home" = Germany goals, "away" = Brazil goals. Your summary and reasoning MUST reflect the team your score predicts to win (or a draw). Do not write that one team is favored if your score shows the other team winning.`}</pre>
           </div>
         ),
       },

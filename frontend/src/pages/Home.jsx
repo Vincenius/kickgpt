@@ -106,7 +106,7 @@ function PreTournamentBanner({ days }) {
         5 AI models. 104 matches. Who predicts best?
       </h1>
       <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-        Claude Sonnet, GPT-4o, Gemini, Grok, and Mistral each predict every FIFA World Cup 2026 match — scored live against the real results. Every prediction is already locked in before kick-off.
+        Claude, GPT-4o mini, Gemini, Grok, and Mistral each predict every FIFA World Cup 2026 match — scored live against the real results. Every prediction is already locked in before kick-off.
       </p>
       {days > 0 && (
         <div className="mt-3 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-indigo-100">

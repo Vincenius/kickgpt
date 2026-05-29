@@ -96,7 +96,7 @@ async function callModelForBonus(modelName, prompt) {
   if (modelName === 'gpt') {
     const OpenAI = require('openai');
     const client = new OpenAI.default({ apiKey: process.env.OPENAI_API_KEY });
-    const r = await client.responses.create({ model: process.env.OPENAI_MODEL || 'gpt-5.5', tools: [{ type: 'web_search_preview' }], input: prompt });
+    const r = await client.responses.create({ model: process.env.OPENAI_MODEL || 'gpt-4o', tools: [{ type: 'web_search_preview' }], input: prompt });
     return r.output_text;
   }
   if (modelName === 'gemini') {
@@ -165,8 +165,8 @@ async function main() {
   };
 
   // 1. Tip all group stage matches
-  const matches = db.prepare(`SELECT * FROM matches WHERE stage = 'group' AND home_team != 'TBD' ORDER BY matchday, group_name, id`).all();
-  console.log(`\n🌍 Step 1: Tipping ${matches.length} group stage matches...\n`);
+  const matches = db.prepare(`SELECT * FROM matches WHERE stage = 'group' AND matchday = 1 AND home_team != 'TBD' ORDER BY group_name, id`).all();
+  console.log(`\n🌍 Step 1: Tipping ${matches.length} MD1 matches (MD2/3 auto-trigger after results)...\n`);
   await tipMatches(matches, 'initial');
 
   // 2. Tip bonus questions — locked once tournament starts
