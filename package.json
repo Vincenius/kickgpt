@@ -1,0 +1,31 @@
+{
+  "name": "wm-ai-predictor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "node --watch backend/index.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start": "node backend/index.js",
+    "tip:dry": "node scripts/tip-dry.js",
+    "tip:groups": "node scripts/tip-groups.js",
+    "tip:all": "node scripts/tip-all.js",
+    "db:seed": "node -e \"require('./backend/db').init()\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@google/generative-ai": "^0.15.0",
+    "axios": "^1.6.8",
+    "better-sqlite3": "^12.10.0",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "node-cron": "^3.0.3",
+    "openai": "^4.47.3"
+  },
+  "optionalDependencies": {
+    "canvas": "^2.11.2"
+  }
+}

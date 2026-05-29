@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0A0A0F] text-white antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track { background: #131320; }
+  ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-card rounded-2xl border border-white/5;
+  }
+
+  .badge-live {
+    @apply inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+
+  .badge-disputed {
+    @apply inline-flex items-center gap-1 bg-amber-500/20 text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+
+  .badge-consensus {
+    @apply inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+
+  .score-big {
+    @apply text-4xl font-extrabold tabular-nums tracking-tight;
+  }
+
+  .nav-tab {
+    @apply flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200;
+  }
+
+  .nav-tab-active {
+    @apply bg-white/10 text-white;
+  }
+
+  .nav-tab-inactive {
+    @apply text-gray-400 hover:text-white hover:bg-white/5;
+  }
+
+  .btn-primary {
+    @apply bg-violet-600 hover:bg-violet-500 text-white font-semibold px-4 py-2 rounded-xl transition-colors text-sm;
+  }
+}
